@@ -30,6 +30,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{min-height:100%}
 body{
   background:var(--night);
@@ -191,6 +192,24 @@ textarea{width:100%;font-family:var(--body);font-size:1.2rem;background:var(--ed
 .land .num{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-family:var(--pixel);font-size:.45rem;color:var(--paper)}
 .recap .ric{display:flex;align-items:center;justify-content:center;width:32px}
 .rrow{display:flex;gap:10px;align-items:center}
+summary.rrow{cursor:pointer;list-style:none}
+summary.rrow::-webkit-details-marker{display:none}
+summary.rrow:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.chev{flex:none;font-size:.8rem;color:var(--gold);transition:transform .15s steps(2)}
+details[open] .chev{transform:rotate(90deg)}
+.lvls{display:flex;flex-direction:column;gap:12px;margin-top:12px;padding-top:12px;border-top:2px dashed var(--night-3)}
+.lvlh{display:flex;align-items:center;gap:8px}
+.lvlh b{font-family:var(--pixel);font-weight:400;font-size:.5rem;line-height:1.6}
+.lvlh code{margin-left:auto;font-size:1.05rem}
+.lvla{display:flex;flex-wrap:wrap;gap:6px}
+.lvla .a{background:var(--night-2);color:var(--paper);padding:2px 8px;font-size:1.1rem;line-height:1.1}
+.lvla .a.dc{background:var(--gold);color:var(--night)}
+.lvla .a.you{background:var(--raspberry);color:var(--paper);box-shadow:0 0 0 2px var(--paper)}
+.suggest{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;background:var(--edge);padding:10px 12px;box-shadow:0 0 0 3px var(--gold)}
+.suggest b{color:var(--gold);font-weight:400}
+.suggest small{flex-basis:100%;color:var(--muted);font-size:1rem}
+.suggest.shake{animation:shake .3s steps(3)}
+.btn.sm{padding:8px 12px;font-size:.55rem;margin:4px 8px 8px 4px}
 .rrow>span:nth-child(2){flex:1 1 auto;min-width:0}
 .rrow>em,.rrow>code{flex:none}
 @media (max-width:440px){.rrow>em{display:none}}
@@ -212,7 +231,7 @@ footer{font-size:1rem;color:#7D84B5;text-align:center;max-width:58ch;margin:0 au
   *{animation:none!important;transition:none!important}
 }
 </style>
-<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>body{margin:0}img{max-width:100%}</style>
 </head>
 <body>
 
@@ -335,7 +354,8 @@ const NEW_RAW = [
  {q:"Name something you can fold", a:"Paper;Clothes|laundry;Towel;Napkin;Map;Blanket;Sheets|bed sheet;Letter;Shirt;Pants;Origami;Paper airplane;Chair|folding chair;Table|folding table;Arms;Hands;Umbrella;Envelope;Phone|foldable phone;Laptop;Wallet;Card|greeting card;Tent;Stroller;Sofa bed|futon;Ironing board;Fan|hand fan;Cards|poker hand|your hand;Egg whites|batter;Dough|pastry;Burrito|tortilla;Pizza|pizza slice;Crepe;Omelette|omelet;Taco;Dumpling;Socks;Flag;Newspaper;Page|book page;Box|cardboard box;Plastic bag|bag;Bike|folding bike;Scooter;Wheelchair;Ladder;Pocket knife|knife;Glasses|sunglasses;Murphy bed|bed;Door|folding door;Room divider|screen;Legs;Wings;Fitted sheet;Ears;Hat;Business|company;Protein;Mountains"},
  {q:"Name a board game", a:"Monopoly;Chess;Scrabble;Clue|cluedo;Checkers|draughts;Candy Land|candyland;Chutes and Ladders|snakes and ladders;The Game of Life|game of life|life;Sorry!|sorry;Risk;Battleship;Connect Four|connect 4;Trouble;Guess Who|guess who?;Trivial Pursuit;Pictionary;Catan|settlers of catan;Ticket to Ride;Backgammon;Ludo|parcheesi|pachisi;Go;Mancala;Mouse Trap|mousetrap;Stratego;Othello|reversi;Chinese Checkers;Mastermind;Cranium;Hungry Hungry Hippos;Pandemic;Carcassonne;Azul;Wingspan;Splendor;Sequence;Blokus;Dixit;Betrayal at House on the Hill;King of Tokyo;Small World;Scythe;Terraforming Mars;Gloomhaven;Root;Everdell;Cascadia;Kingdomino;Patchwork;Agricola;Puerto Rico;Power Grid;Mysterium;Payday;Masterpiece;Axis & Allies|axis and allies;Diplomacy;Labyrinth;Hive;Quoridor;Santorini;Onitama;Tsuro;Shogi;Xiangqi|chinese chess;Nine Men's Morris;Twilight Imperium;Hnefatafl;Senet;Royal Game of Ur"},
  {q:"Name the capital city of an African country", a:"Cairo;Nairobi;Cape Town;Pretoria;Addis Ababa;Abuja;Accra;Rabat;Dakar;Tunis;Algiers;Kinshasa;Tripoli;Khartoum;Kampala;Kigali;Luanda;Harare;Lusaka;Maputo;Mogadishu;Dodoma;Antananarivo;Windhoek;Gaborone;Monrovia;Freetown;Bamako;Yaoundé|yaounde;Brazzaville;Libreville;Djibouti;Asmara;Juba;Lilongwe;Niamey;N'Djamena|ndjamena;Ouagadougou;Conakry;Bangui;Port Louis;Victoria;Maseru;Mbabane;Banjul;Lomé|lome;Porto-Novo|porto novo;Yamoussoukro;Nouakchott;Bissau;Malabo;Praia;São Tomé|sao tome;Moroni;Gitega;Bloemfontein;Lobamba"},
- {q:"Name something that melts", a:"Ice|ice cubes;Ice cream;Snow;Chocolate;Butter;Cheese;Candle|wax;Popsicle;Glacier|glaciers;Snowman;Metal|steel|iron;Gold;Plastic;Crayon|crayons;Marshmallow;Sugar;Icicle;Glass;Lava|rock;Candy|lollipop;Gummy bears|gummies;Ice caps|polar ice caps;Iceberg;Frost;Lead;Silver;Copper;Aluminum|aluminium;Tin;Solder;Caramel;Lipstick;Coconut oil;Lard;Fat;Your heart|heart;Cotton candy;Mozzarella;Frozen yogurt;Slushie;Ice sculpture;Hail;Permafrost;Sorbet;Gelato;Salt;Tar|asphalt;Vinyl records|vinyl;Lip balm;Gum;Hot glue|glue stick;Resin;Olaf;Frosty the Snowman;The Wicked Witch of the West|wicked witch;Tungsten"}
+ {q:"Name something that melts", a:"Ice|ice cubes;Ice cream;Snow;Chocolate;Butter;Cheese;Candle|wax;Popsicle;Glacier|glaciers;Snowman;Metal|steel|iron;Gold;Plastic;Crayon|crayons;Marshmallow;Sugar;Icicle;Glass;Lava|rock;Candy|lollipop;Gummy bears|gummies;Ice caps|polar ice caps;Iceberg;Frost;Lead;Silver;Copper;Aluminum|aluminium;Tin;Solder;Caramel;Lipstick;Coconut oil;Lard;Fat;Your heart|heart;Cotton candy;Mozzarella;Frozen yogurt;Slushie;Ice sculpture;Hail;Permafrost;Sorbet;Gelato;Salt;Tar|asphalt;Vinyl records|vinyl;Lip balm;Gum;Hot glue|glue stick;Resin;Olaf;Frosty the Snowman;The Wicked Witch of the West|wicked witch;Tungsten"},
+ {q:"Name a rock band", a:"The Beatles|beatles;Queen;AC/DC|acdc|ac dc;Led Zeppelin;The Rolling Stones|rolling stones|the stones;Nirvana;Guns N' Roses|guns n roses|guns and roses|gnr;Metallica;Pink Floyd;Linkin Park;Coldplay;Red Hot Chili Peppers|rhcp|chili peppers;Foo Fighters;Green Day;Kiss;Aerosmith;U2;Bon Jovi;Imagine Dragons;The Who;Arctic Monkeys;The Doors;Radiohead;Black Sabbath;Iron Maiden;Oasis;Soda Stereo;Maná|mana;Fall Out Boy;My Chemical Romance|mcr;Paramore;The Killers;Muse;Pearl Jam;Def Leppard;Van Halen;Deep Purple;Journey;Blink-182|blink 182;Evanescence;Scorpions;Rammstein;The Strokes;Twenty One Pilots;Maroon 5;System of a Down|soad;Slipknot;Eagles;Fleetwood Mac;Dire Straits;The Police;The Clash;Ramones;Sex Pistols;Creedence Clearwater Revival|ccr|creedence;Lynyrd Skynyrd;ZZ Top;The Beach Boys|beach boys;The Cure;Blur;Måneskin|maneskin;The White Stripes|white stripes;The Black Keys|black keys;Rage Against the Machine|ratm;Korn;Limp Bizkit;Panic! at the Disco|panic at the disco;Kings of Leon;Weezer;The Offspring|offspring;Nickelback;Megadeth;Slayer;Pantera;Motörhead|motorhead;Judas Priest;Toto;Boston;Rush;Héroes del Silencio|heroes del silencio;Caifanes;Café Tacvba|cafe tacuba|cafe tacvba;Los Prisioneros;Enanitos Verdes|los enanitos verdes;Los Fabulosos Cadillacs;Babasónicos|babasonicos;Rata Blanca;Libido;Mar de Copas;The Smiths;Joy Division;Talking Heads;R.E.M.|rem;Pixies;Sonic Youth;Soundgarden;Alice in Chains;Stone Temple Pilots;The Smashing Pumpkins|smashing pumpkins;Deftones;Tool;Sum 41;Good Charlotte;Simple Plan;3 Doors Down|three doors down;Creed;Three Days Grace;Breaking Benjamin;Avenged Sevenfold;Bring Me the Horizon|bmth;Ghost;Greta Van Fleet;Tame Impala;Franz Ferdinand;The Libertines;Kaiser Chiefs;Arcade Fire;Vampire Weekend;The Kinks|kinks;The Velvet Underground|velvet underground;Cream;Genesis;Yes;King Crimson;Jethro Tull;Styx;Foreigner;Heart;Thin Lizzy;Status Quo;The Allman Brothers Band|allman brothers;Grateful Dead;Jefferson Airplane;The Byrds;Los Bunkers;Los Saicos;Frágil|fragil;Babymetal;Os Mutantes;Sigur Rós|sigur ros;Mogwai;Can;Wishbone Ash"}
 ];
 RAW.push(...NEW_RAW);
 
@@ -434,9 +454,16 @@ function pick(seed,count){
    Day 0 is 28 Oct 2026; each cycle gets its own shuffle. */
 function dayNumber(){const d=new Date();return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(2026,9,28))/864e5)}
 function dailyOrder(){
-  const day=dayNumber(), per=Math.floor(PROMPTS.length/ROUNDS);
-  const cycle=Math.floor(day/per), slot=((day%per)+per)%per;
-  return pick(hash("midillion-cycle-"+cycle),PROMPTS.length).slice(slot*ROUNDS,slot*ROUNDS+ROUNDS);
+  /* one continuous stream: each pass through all prompts gets its own shuffle,
+     and a day that straddles two passes skips any prompt it already has */
+  const N=PROMPTS.length, out=[]; let pos=dayNumber()*ROUNDS; const cache={};
+  while(out.length<ROUNDS){
+    const c=Math.floor(pos/N), k=((pos%N)+N)%N;
+    const order=cache[c]||(cache[c]=pick(hash("midillion-cycle-"+c),N));
+    if(!out.includes(order[k])) out.push(order[k]);
+    pos++;
+  }
+  return out;
 }
 function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function store(k,v){try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k,JSON.stringify(v)); }catch(e){return null}}
@@ -558,24 +585,36 @@ function round(){
         <button class="btn" type="button" id="go">Answer</button>
       </div>
       <div class="miss" id="miss" role="status" hidden></div>
+      <div class="suggest" id="suggest" role="status" hidden><span>Did you mean <b id="sgname"></b>?</span><button class="btn sm" type="button" id="sgyes">Yes</button><small>Press Enter to accept, or type a different answer.</small></div>
       <div class="hint">This map has <b>${P.names.length}</b> answers. Aim for the one ranked around <b>#${Math.round((P.names.length-1)/2)+1}</b>.</div>
     </section>
   </div>`;
   const inp=document.getElementById("guess"); inp.focus({preventScroll:true});
-  let sent=false;
+  let sent=false, pending=null;
+  const m=document.getElementById("miss"), sg=document.getElementById("suggest");
+  const flash=el=>{el.hidden=false; el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");};
+  const accept=()=>{ if(sent||!pending) return; sent=true; answer(P.names[pending.idx]); };
   const send=()=>{
     if(sent) return;
-    if(!inp.value.trim()){ inp.placeholder="Type an answer first"; inp.focus(); return; }
-    if(lookup(P,inp.value)<0){
-      const m=document.getElementById("miss");
-      m.textContent=`"${inp.value.trim()}" isn't on our map. Try another answer.`;
-      m.hidden=false; m.classList.remove("shake"); void m.offsetWidth; m.classList.add("shake");
-      inp.value=""; inp.focus(); return;
+    const v=inp.value.trim();
+    if(!v){ inp.placeholder="Type an answer first"; inp.focus(); return; }
+    if(lookupExact(P,v)>=0){ sent=true; answer(v); return; }
+    if(pending && pending.text===v){ accept(); return; }
+    const near=lookup(P,v);
+    if(near>=0){
+      /* close to an answer on the map: ask first, never submit on its own */
+      pending={text:v,idx:near}; m.hidden=true;
+      document.getElementById("sgname").textContent=P.names[near];
+      flash(sg); inp.focus(); return;
     }
-    sent=true; answer(inp.value);
+    pending=null; sg.hidden=true;
+    m.textContent=`"${v}" isn't on our map. Try another answer.`;
+    flash(m); inp.value=""; inp.focus();
   };
   document.getElementById("go").addEventListener("click",send);
+  document.getElementById("sgyes").addEventListener("click",accept);
   inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); send(); } });
+  inp.addEventListener("input",()=>{ if(pending && inp.value.trim()!==pending.text){ pending=null; sg.hidden=true; } });
   const t0=performance.now(), bar=document.getElementById("bar");
   clearInterval(tick);
   tick=setInterval(()=>{
@@ -653,14 +692,19 @@ function finish(){
       const pos=r.e===null?50:(1-r.e)/2*100, top=Math.min(50,pos), h=Math.abs(pos-50);
       return `<div class="col"><span class="line" style="top:${top}%;height:${h}%"></span><span class="cr" style="top:${pos}%">${creature(r.tier,30)}</span><span class="num">${i+1}</span></div>`;}).join("")}</div>
     <h2 style="align-self:flex-start">The answers</h2>
+    <p style="align-self:flex-start">Tap a prompt to see every answer and its level.</p>
     <div class="recap">${S.results.map(r=>{
-      const P=PROMPTS.find(x=>x.q===r.q), n=P.names.length, mid=Math.round((n-1)/2);
-      const near=P.names.slice(Math.max(0,mid-3),mid).concat(P.names.slice(mid+1,mid+4)).map(esc).join(", ");
-      return `<article class="ritem">
-        <div class="rrow"><span class="ric">${creature(r.tier,28)}</span><span>${esc(r.q)}<br><em>You: ${r.rank?esc(r.input)+" · #"+r.rank+" of "+n:esc(r.tier)}</em></span><em>${esc(r.tier)}</em><code>+${r.pts}</code></div>
-        <div class="rans"><span class="chip sky"><small>Most common</small>${esc(P.names[0])}</span><span class="chip mid"><small>Dead center</small>${esc(P.names[mid])}</span><span class="chip sea"><small>Rarest</small>${esc(P.names[n-1])}</span></div>
-        <div class="note">Also on solid ground: ${near}.</div>
-      </article>`;}).join("")}</div>
+      const P=PROMPTS.find(x=>x.q===r.q), n=P.names.length;
+      const groups=LAND.map(c=>({c,items:[]}));
+      P.names.forEach((nm,i)=>{ const g=groups.find(x=>x.c.tier===judge(P,i).tier); if(g) g.items.push({nm,i}); });
+      const body=groups.filter(g=>g.items.length).map(g=>`<div class="lvl">
+          <div class="lvlh">${creature(g.c.tier,22)}<b style="color:${g.c.color}">${esc(g.c.tier)}</b><code>${g.c.pts} pts</code></div>
+          <div class="lvla">${g.items.map(({nm,i})=>`<span class="a${r.rank===i+1?" you":""}${g.c.tier==="Dead Center"?" dc":""}">${i+1}. ${esc(nm)}</span>`).join("")}</div>
+        </div>`).join("");
+      return `<details class="ritem" name="answers">
+        <summary class="rrow"><span class="ric">${creature(r.tier,28)}</span><span>${esc(r.q)}<br><em>You: ${r.rank?esc(r.input)+" · #"+r.rank+" of "+n:esc(r.tier)}</em></span><em>${esc(r.tier)}</em><code>+${r.pts}</code><span class="chev" aria-hidden="true">▶</span></summary>
+        <div class="lvls">${body}</div>
+      </details>`;}).join("")}</div>
     <textarea id="share" rows="2" readonly aria-label="Share text">${esc(share)}</textarea>
     <div class="row" style="justify-content:center">
       <button class="btn" id="copy">Copy result</button>
@@ -676,6 +720,9 @@ function finish(){
   };
   document.getElementById("again").onclick=()=>start("practice");
   document.getElementById("home").onclick=home;
+  /* only one answer tab open at a time (also for browsers without <details name>) */
+  const tabs=[...document.querySelectorAll("details.ritem")];
+  tabs.forEach(d=>d.addEventListener("toggle",()=>{ if(d.open) tabs.forEach(o=>{ if(o!==d) o.open=false; }); }));
 }
 
 home();
