@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Midillion: name the answer right in the middle. A fan-made game inspired by Krillion and Noillirk.">
+<meta name="theme-color" content="#0E1330">
+<title>Midillion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: one centred column of chunky pixel panels; a slim sky/ground/sea elevation meter in hard colour bands sits beside the play panel. Single dark 8-bit night look. */
+:root{
+  --night:#0E1330;
+  --night-2:#181F4A;
+  --night-3:#2A3370;
+  --edge:#05081C;
+  --paper:#F3EEDF;
+  --muted:#A9AFD6;
+  --sky-1:#25307A;--sky-2:#3E5CB8;--sky-3:#6FA3E6;--sky:#9FD4F2;
+  --grass:#5FC46B;--soil:#8C6A45;--soil-2:#6B4E30;
+  --sea:#2F7FB5;--sea-2:#1B5A8F;--deep:#103A66;--abyss:#071C36;
+  --mint:#A8E6C3;--mint-d:#4FA97A;
+  --lavender:#C9B8F2;--peach:#FFC6A8;--gold:#FFD66E;--gold-d:#C79A2E;
+  --raspberry:#E2457A;
+  --danger:#FF6B6B;
+  --pixel:"Press Start 2P","Courier New",monospace;
+  --body:"VT323","Courier New",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:var(--night);
+  background-image:
+    linear-gradient(var(--paper),var(--paper)),linear-gradient(var(--paper),var(--paper)),
+    linear-gradient(var(--paper),var(--paper)),linear-gradient(var(--paper),var(--paper)),
+    linear-gradient(var(--gold),var(--gold));
+  background-size:3px 3px,3px 3px,3px 3px,3px 3px,3px 3px;
+  background-position:12% 6%,82% 4%,64% 22%,28% 34%,92% 30%;
+  background-repeat:no-repeat;background-attachment:fixed;
+  color:var(--paper);
+  font-family:var(--body);font-size:22px;line-height:1.2;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:20px 40px;
+  -webkit-font-smoothing:none;
+}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.14) 0 1px,transparent 1px 3px);z-index:50}
+svg.px{shape-rendering:crispEdges;image-rendering:pixelated;display:block}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand h1{font-family:var(--pixel);font-weight:400;font-size:1.35rem;margin:0;line-height:1;
+  text-shadow:3px 3px 0 var(--raspberry)}
+.brand h1 span{color:var(--mint)}
+.kin{font-size:1.05rem;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.kin b{font-weight:400;color:var(--paper)}
+
+/* pixel panel: hard 4px border + stepped drop shadow */
+.panel{
+  background:var(--night-2);
+  box-shadow:0 0 0 4px var(--edge),inset 0 0 0 4px var(--night-3),8px 8px 0 4px var(--edge);
+  margin:4px;
+}
+button{font:inherit;cursor:pointer}
+.btn{
+  font-family:var(--pixel);font-size:.68rem;line-height:1.4;text-transform:uppercase;
+  border:0;padding:14px 18px;margin:4px 10px 10px 4px;
+  background:var(--mint);color:var(--night);
+  box-shadow:0 0 0 4px var(--edge),inset -4px -4px 0 var(--mint-d),6px 6px 0 4px var(--edge);
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 4px var(--edge),inset 4px 4px 0 var(--mint-d),2px 2px 0 4px var(--edge)}
+.btn.alt{background:var(--night-3);color:var(--paper);box-shadow:0 0 0 4px var(--edge),inset -4px -4px 0 #1B2152,6px 6px 0 4px var(--edge)}
+.btn.alt:active{box-shadow:0 0 0 4px var(--edge),inset 4px 4px 0 #1B2152,2px 2px 0 4px var(--edge)}
+.btn.ghost{background:transparent;color:var(--muted);box-shadow:none;padding:10px 4px;text-decoration:underline;text-underline-offset:4px}
+.btn:focus-visible,input:focus-visible{outline:4px solid var(--gold);outline-offset:6px}
+
+/* hero cross-section, hard bands */
+.section{display:grid;grid-template-rows:1fr 40px 1fr;height:240px;position:relative;overflow:hidden}
+.skyband{position:relative;background:linear-gradient(180deg,var(--sky-1) 0 25%,var(--sky-2) 25% 55%,var(--sky-3) 55% 80%,var(--sky) 80%)}
+.groundband{position:relative;background:linear-gradient(180deg,var(--grass) 0 8px,var(--soil) 8px 26px,var(--soil-2) 26px)}
+.seaband{position:relative;background:linear-gradient(180deg,var(--sea) 0 25%,var(--sea-2) 25% 50%,var(--deep) 50% 78%,var(--abyss) 78%)}
+.lab{position:absolute;font-family:var(--pixel);font-size:.55rem;line-height:1.4;padding:6px 8px;background:var(--edge);color:var(--paper)}
+.lab.t{top:10px;left:10px}.lab.b{bottom:10px;left:10px}
+.lab.m{left:50%;top:50%;transform:translate(-50%,-50%);color:var(--mint);white-space:nowrap}
+.deco{position:absolute}
+.krill-hero{position:absolute;left:50%;top:-40px;transform:translateX(-50%);animation:hop 1.2s steps(2) infinite}
+@keyframes hop{50%{transform:translate(-50%,-6px)}}
+
+.card{padding:24px;display:flex;flex-direction:column;gap:16px}
+.card h2{font-family:var(--pixel);font-weight:400;font-size:.95rem;line-height:1.5;margin:0;text-wrap:balance}
+.card p{margin:0;color:var(--muted);max-width:60ch}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.rule{padding:12px;color:var(--night);display:flex;flex-direction:column;gap:6px;min-width:0;box-shadow:0 0 0 3px var(--edge),inset -3px -3px 0 rgba(0,0,0,.18)}
+.rule b{font-family:var(--pixel);font-weight:400;font-size:.55rem;line-height:1.5}
+.rule small{font-size:1.05rem;line-height:1.1}
+.rule.sky{background:var(--sky)}.rule.mid{background:var(--mint)}.rule.sea{background:var(--lavender)}
+.row{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center}
+.today{color:var(--muted)}
+.today b{color:var(--gold);font-weight:400}
+
+/* play */
+.play{display:grid;grid-template-columns:64px minmax(0,1fr);gap:18px;align-items:stretch}
+.meter{position:relative;min-height:360px;margin:4px;box-shadow:0 0 0 4px var(--edge),6px 6px 0 4px var(--edge);
+  background:linear-gradient(180deg,var(--sky-1) 0 10%,var(--sky-2) 10% 22.5%,var(--sky-3) 22.5% 34%,var(--sky) 34% 40%,
+    var(--grass) 40% 42%,var(--soil) 42% 52%,var(--soil-2) 52% 60%,
+    var(--sea) 60% 66%,var(--sea-2) 66% 77.5%,var(--deep) 77.5% 90%,var(--abyss) 90%)}
+.meter .zone{position:absolute;left:0;right:0;top:42.5%;height:15%;
+  background:repeating-linear-gradient(90deg,var(--gold) 0 6px,transparent 6px 12px) top/100% 3px no-repeat,
+             repeating-linear-gradient(90deg,var(--gold) 0 6px,transparent 6px 12px) bottom/100% 3px no-repeat}
+.meter .tag{position:absolute;left:0;right:0;text-align:center;font-family:var(--pixel);font-size:.42rem;color:var(--paper);text-shadow:2px 2px 0 var(--edge)}
+.meter .tick{position:absolute;right:4px;width:8px;height:2px;background:rgba(243,238,223,.6)}
+.meter .me{position:absolute;left:50%;transform:translate(-50%,-50%);top:50%;transition:top 1.1s steps(12)}
+.meter .me.idle{animation:bob 1.6s steps(2) infinite}
+@keyframes bob{50%{transform:translate(-50%,-70%)}}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);flex-wrap:wrap}
+.dots{display:flex;gap:6px}
+.dot{width:14px;height:14px;background:var(--night-3);box-shadow:0 0 0 2px var(--edge)}
+.dot.now{background:var(--paper);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{background:var(--night-3)}}
+.dot.c{background:var(--gold);box-shadow:0 0 0 2px var(--edge),0 0 0 4px var(--gold)}.dot.g{background:var(--mint)}.dot.y{background:var(--gold)}.dot.s{background:var(--sky)}.dot.l{background:var(--lavender)}.dot.x{background:#4B527F}
+.score{color:var(--gold)}
+.prompt{font-family:var(--pixel);font-weight:400;font-size:1.05rem;line-height:1.55;margin:0;text-wrap:balance}
+.timer{height:16px;background:var(--edge);padding:3px;box-shadow:0 0 0 2px var(--night-3)}
+.timer i{display:block;height:100%;width:100%;
+  background:repeating-linear-gradient(90deg,var(--mint) 0 10px,transparent 10px 12px)}
+.timer i.low{background:repeating-linear-gradient(90deg,var(--danger) 0 10px,transparent 10px 12px)}
+.form{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text]{
+  flex:1 1 200px;min-width:0;font:inherit;font-size:1.5rem;color:var(--paper);
+  background:var(--edge);border:0;padding:8px 14px;margin:4px;
+  box-shadow:0 0 0 4px var(--night-3);caret-color:var(--gold);
+}
+input::placeholder{color:#6F76A6}
+.hint{color:var(--muted)}
+.hint b{color:var(--paper);font-weight:400}
+
+.reveal{display:flex;flex-direction:column;gap:16px;animation:flash .4s steps(3)}
+@keyframes flash{0%{opacity:0}34%{opacity:1}67%{opacity:.4}}
+.verdict{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.verdict h3{font-family:var(--pixel);font-weight:400;font-size:1rem;line-height:1.4;margin:0}
+.pts{font-family:var(--pixel);font-size:.9rem;color:var(--gold)}
+.elev{color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:end}
+.tile{aspect-ratio:1;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:8px;color:var(--night);
+  clip-path:polygon(0 8px,8px 8px,8px 0,calc(100% - 8px) 0,calc(100% - 8px) 8px,100% 8px,100% calc(100% - 8px),calc(100% - 8px) calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,8px calc(100% - 8px),0 calc(100% - 8px));
+  box-shadow:inset -6px -6px 0 rgba(0,0,0,.18),inset 6px 6px 0 rgba(255,255,255,.25)}
+.tile small{font-family:var(--pixel);font-size:.42rem;line-height:1.4;opacity:.8}
+.tile b{font-weight:400;font-size:clamp(1rem,3.8vw,1.4rem);line-height:1;overflow-wrap:break-word;max-width:100%}
+.tile.sky{background:var(--sky);transform:scale(.86)}
+.tile.mid{background:var(--mint)}
+.tile.sea{background:var(--lavender);transform:scale(.86)}
+.yours{background:var(--peach);color:var(--night);padding:10px 14px;display:flex;gap:12px;align-items:center;margin:3px;box-shadow:0 0 0 3px var(--edge),inset -4px -4px 0 rgba(0,0,0,.15)}
+.yours svg{flex:none}
+.yours div{min-width:0}
+.yours b{font-family:var(--pixel);font-weight:400;font-size:.6rem;line-height:1.6}
+.yours .elev{color:#5A4A6B}
+.note{color:#8D93C2;font-size:1.1rem}
+
+.final{text-align:center;align-items:center}
+.final .big{font-family:var(--pixel);font-size:2rem;color:var(--gold);line-height:1;text-shadow:4px 4px 0 var(--edge)}
+.final .title{font-family:var(--pixel);font-size:1rem;line-height:1.5;color:var(--mint)}
+.recap{width:100%;display:flex;flex-direction:column;gap:8px;text-align:left}
+.ritem{background:var(--edge);padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.rans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.chip{color:var(--night);padding:6px 8px;display:flex;flex-direction:column;gap:3px;font-size:1.1rem;line-height:1;overflow-wrap:break-word;hyphens:auto;min-width:0;box-shadow:inset -3px -3px 0 rgba(0,0,0,.18)}
+.chip small{font-family:var(--pixel);font-size:.38rem;line-height:1.4;opacity:.8}
+.chip.sky{background:var(--sky)}.chip.mid{background:var(--mint)}.chip.sea{background:var(--lavender)}
+.recap span{overflow-wrap:anywhere}
+.recap em{font-style:normal;color:var(--muted)}
+.recap code{font-family:var(--body);color:var(--gold);font-size:1.2rem}
+textarea{width:100%;font-family:var(--body);font-size:1.2rem;background:var(--edge);color:var(--paper);border:0;padding:10px;box-shadow:0 0 0 3px var(--night-3)}
+.legend{display:flex;flex-direction:column}
+.lrow{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 8px;border-bottom:2px dashed var(--night-3)}
+.lrow:last-child{border-bottom:0}
+.lrow .ic{display:flex;justify-content:center}
+.lrow b{font-family:var(--pixel);font-weight:400;font-size:.55rem;line-height:1.6;display:block}
+.lrow small{color:var(--muted);font-size:1.05rem;line-height:1.1;display:block}
+.lrow code{font-family:var(--body);color:var(--gold);font-size:1.25rem;text-align:right;white-space:nowrap}
+.lrow.best{background:rgba(168,230,195,.1);box-shadow:inset 4px 0 0 var(--mint)}
+.land{position:relative;height:250px;width:calc(100% - 8px);margin:4px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));box-shadow:0 0 0 4px var(--edge);
+  background:linear-gradient(180deg,var(--sky-1) 0 10%,var(--sky-2) 10% 22.5%,var(--sky-3) 22.5% 34%,var(--sky) 34% 40%,var(--grass) 40% 42%,var(--soil) 42% 52%,var(--soil-2) 52% 60%,var(--sea) 60% 66%,var(--sea-2) 66% 77.5%,var(--deep) 77.5% 90%,var(--abyss) 90%)}
+.land .col{position:relative}
+.land .line{position:absolute;left:50%;width:2px;margin-left:-1px;background:repeating-linear-gradient(180deg,var(--paper) 0 4px,transparent 4px 6px)}
+.land .cr{position:absolute;left:50%;transform:translate(-50%,-50%)}
+.land .num{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-family:var(--pixel);font-size:.45rem;color:var(--paper)}
+.recap .ric{display:flex;align-items:center;justify-content:center;width:32px}
+.rrow{display:flex;gap:10px;align-items:center}
+.rrow>span:nth-child(2){flex:1 1 auto;min-width:0}
+.rrow>em,.rrow>code{flex:none}
+@media (max-width:440px){.rrow>em{display:none}}
+.miss{color:var(--peach)}
+.miss.shake{animation:shake .3s steps(3)}
+@keyframes shake{33%{transform:translateX(-6px)}66%{transform:translateX(6px)}}
+footer{font-size:1rem;color:#7D84B5;text-align:center;max-width:58ch;margin:0 auto}
+@media (max-width:440px){
+  body{font-size:20px}
+  .rules{grid-template-columns:1fr}
+  .prompt{font-size:.82rem}
+  .card{padding:18px}
+  .brand h1{font-size:1.05rem}
+  .play{grid-template-columns:46px minmax(0,1fr);gap:14px}
+  .meter .tag{font-size:.34rem}
+  .lab{font-size:.45rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span id="logo"></span>
+      <h1>MID<span>ILLION</span></h1>
+    </div>
+    <div class="kin">Krillion dives deep. Noillirk floats up. <b>Midillion stays on solid ground.</b></div>
+  </header>
+
+  <main id="app"></main>
+
+  <footer>A fan-made game inspired by Krillion and Noillirk. Not affiliated with either. Answer rankings are our own estimates of how often people give each answer.</footer>
+</div>
+
+<script>
+/* ---------- pixel art ---------- */
+const ART={
+ krill:["....................a.","...................a..","..................a..a",".........######..a..a.",".......##llllll##a.a..","......#lllll###wee#...",".....#ll##d###d#ee#==.","....#l##d###d#######==","...#l##d###d#######...","...#d##d###d######....","...#d##.p.p.p.p.p.....","...##d#.p.p.p.p.p.....","....##d#..............","...tt###..............","..tttt.##.............",".tt..tt..............."],
+ cloud:["....####....","..########..",".##########.","############",".##########."],
+ balloons:[".a....b....c.","aaa..bbb..ccc","aaa..bbb..ccc",".a....b....c.",".s....s....s.","..s...s...s..","...s..s..s...","....s.s.s....",".....sss.....","......s......"],
+ bubble:[".###.","#...#","#...#","#...#",".###."],
+ tuft:["#.#.#","#####"],
+ bird:["...##........","...###.......","...####......","....####.###.","..#########o#>","############.","t.#lllllll#..","tt..#####...."],
+ butterfly:["..a.....a..","...a...a...",".##..#..##.","#ll#.#.#ll#","#lll###lll#","#llll#llll#",".#lll#lll#.","..##.#.##..",".#ll#.#ll#.",".#l#...#l#.","..#.....#.."],
+ snail:[".a.a.........","..a.a..####..","..aa..#llll#.","..aa.#l####l#",".aaa.#l#ll#l#",".aaa.#l##l#l#",".aaaa#llll#l#","aaaaaa####l#.","aaaaaaaaaaaa."],
+ frog:["..ww.....ww..",".#wb#...#bw#.",".###########.","#############","#lll#####lll#","##lllllllll##",".##lllllll##.","##.#.....#.##"],
+ crab:["##.#......#.##","###........###",".#...w..w...#.",".##..b..b..##.","..##########..",".############.","..#.#....#.#..",".#..#....#..#."],
+ jelly:["...#####...",".##lllll##.","#lllllllll#","#ll#lll#ll#","###########",".l.l.l.l.l.","l..l..l..l.",".l..l..l..l","l..l..l..l.",".l.....l..."],
+ ladybug:["..a.....a..","...a...a...","...#####...","..rrr#rrr..",".rrbr#rbrr.","rrrrr#rrrrr","rbrrr#rrrbr",".rrrr#rrrr.","..rrr#rrr.."],
+ rock:["..####..",".#llll#.","#l####d#","#######d",".######."]
+};
+function pixSvg(rows,pal,width,extra=""){
+  const h=rows.length,w=rows[0].length;let r="";
+  rows.forEach((row,y)=>{[...row].forEach((ch,x)=>{const c=pal[ch];if(c) r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c}"/>`;});});
+  return `<svg class="px" viewBox="0 0 ${w} ${h}" width="${width}" height="${Math.round(width*h/w)}" aria-hidden="true" ${extra}>${r}</svg>`;
+}
+
+/* ---------- data: answers ordered from most common to rarest ---------- */
+const RAW = [
+ {q:"Name a fruit", a:"Apple;Banana;Orange;Strawberry;Grape;Mango;Pineapple;Watermelon;Pear;Peach;Cherry;Blueberry;Kiwi;Lemon;Raspberry;Plum;Papaya;Coconut;Apricot;Pomegranate;Lime;Fig;Grapefruit;Nectarine;Blackberry;Passion fruit|maracuya;Guava;Lychee|litchi;Persimmon;Dragon fruit|pitaya|pitahaya;Cantaloupe;Tangerine|mandarin;Date;Quince;Kumquat;Lúcuma|lucuma;Cherimoya|chirimoya;Rambutan;Durian;Mangosteen;Soursop|guanabana;Jackfruit;Starfruit|carambola;Gooseberry;Elderberry;Loquat;Pawpaw;Salak|snake fruit;Jabuticaba;Feijoa"},
+ {q:"Name an animal that lives in the ocean", a:"Shark;Whale;Dolphin;Octopus;Jellyfish;Starfish|sea star;Seal;Sea turtle|turtle;Crab;Squid;Lobster;Clownfish;Stingray;Shrimp|prawn;Seahorse;Orca|killer whale;Eel;Sea lion;Walrus;Manatee;Tuna;Swordfish;Narwhal;Sea urchin;Oyster;Clam;Krill;Coral;Barracuda;Pufferfish|blowfish;Anglerfish;Manta ray;Cuttlefish;Beluga;Sea otter;Marlin;Sardine;Anchovy;Dugong;Barnacle;Lionfish;Sea anemone|anemone;Sea cucumber;Nudibranch;Sunfish|mola;Hagfish;Coelacanth;Vampire squid;Sea pig;Siphonophore"},
+ {q:"Name a country in South America", a:"Brazil|brasil;Argentina;Peru|perú;Chile;Colombia;Venezuela;Ecuador;Bolivia;Uruguay;Paraguay;Guyana;Suriname;French Guiana"},
+ {q:"Name a color", a:"Red;Blue;Green;Yellow;Purple;Orange;Pink;Black;White;Brown;Gray|grey;Violet;Turquoise;Teal;Magenta;Cyan;Indigo;Maroon;Beige;Gold;Silver;Navy|navy blue;Lavender;Crimson;Scarlet;Lime;Olive;Coral;Peach;Mint;Burgundy;Salmon;Tan;Ivory;Amber;Aqua;Fuchsia;Mustard;Mauve;Khaki;Ochre|ocher;Periwinkle;Chartreuse;Vermilion;Cerulean;Taupe;Sienna;Cobalt;Umber;Celadon;Viridian;Aubergine;Puce"},
+ {q:"Name something you find in a kitchen", a:"Fridge|refrigerator;Stove;Oven;Sink;Microwave;Knife;Spoon;Fork;Plate;Pan|frying pan;Pot;Toaster;Kettle;Cup;Blender;Dishwasher;Cutting board;Spatula;Bowl;Table;Cabinet|cupboard;Freezer;Mug;Coffee maker;Whisk;Ladle;Trash can|bin;Sponge;Colander;Grater;Oven mitt;Rolling pin;Apron;Tongs;Peeler;Napkin;Can opener;Measuring cup;Tea towel|dish towel;Sieve|strainer;Wok;Scale;Timer;Food processor;Pressure cooker;Corkscrew;Garlic press;Mortar and pestle|mortar;Zester;Mandoline;Ramekin;Baster"},
+ {q:"Name a musical instrument", a:"Piano;Guitar;Drums|drum;Violin;Flute;Trumpet;Saxophone|sax;Cello;Clarinet;Harp;Bass|bass guitar;Ukulele;Trombone;Harmonica;Keyboard;Tuba;Banjo;Accordion;Xylophone;Organ;Tambourine;Oboe;Viola;Triangle;French horn|horn;Bagpipes;Mandolin;Bassoon;Recorder;Synthesizer|synth;Cymbals;Maracas;Bongos;Piccolo;Sitar;Cajón|cajon;Marimba;Didgeridoo;Pan flute|zampoña;Charango;Steel drum|steelpan;Lute;Kalimba;Theremin;Glockenspiel;Tabla;Quena;Zither;Oud;Koto;Erhu;Shamisen;Ocarina;Hurdy-gurdy;Duduk;Sarod"},
+ {q:"Name a sport", a:"Soccer|football|futbol;Basketball;Tennis;Baseball;Volleyball;Swimming;Golf;American football;Hockey|ice hockey;Boxing;Cricket;Rugby;Running|track;Cycling;Skiing;Badminton;Table tennis|ping pong;Surfing;Gymnastics;Wrestling;Skateboarding;Snowboarding;Karate;Softball;Bowling;Climbing|rock climbing;Fencing;Archery;Rowing;Judo;Lacrosse;Handball;Water polo;Taekwondo;Darts;Squash;Pickleball;Polo;Sailing;Triathlon;Curling;Kayaking;Equestrian|horse riding;Bobsled;Luge;Biathlon;Hurling;Kabaddi;Sepak takraw;Korfball;Jai alai|pelota;Underwater hockey;Bossaball"},
+ {q:"Name a part of the body", a:"Head;Hand;Arm;Leg;Foot;Eye;Nose;Mouth;Ear;Heart;Finger;Knee;Hair;Face;Toe;Elbow;Neck;Shoulder;Brain;Stomach;Back;Chest;Lips|lip;Teeth|tooth;Tongue;Lungs|lung;Skin;Liver;Wrist;Ankle;Hip;Chin;Thumb;Kidney;Cheek;Eyebrow;Forehead;Heel;Thigh;Calf;Spine;Rib;Shin;Eyelash;Pancreas;Spleen;Appendix;Knuckle;Belly button|navel;Earlobe;Collarbone|clavicle;Gallbladder;Femur;Cornea;Larynx;Uvula;Septum;Cuticle;Philtrum"},
+ {q:"Name a dog breed", a:"Labrador|lab|labrador retriever;Golden retriever;German shepherd;Poodle;Bulldog;Chihuahua;Beagle;Husky|siberian husky;Pug;Rottweiler;Dachshund|sausage dog;Boxer;Border collie;Yorkshire terrier|yorkie;Shih tzu;Great dane;Doberman;Pit bull|pitbull;Corgi;French bulldog|frenchie;Dalmatian;Pomeranian;Maltese;Cocker spaniel;Schnauzer;Saint bernard|st bernard;Greyhound;Shiba inu|shiba;Akita;Australian shepherd;Jack russell;Bichon frise|bichon;Basset hound;Chow chow;Bernese mountain dog;Samoyed;Newfoundland;Mastiff;Bloodhound;Whippet;Weimaraner;Pekingese;Shar pei;Papillon;Vizsla;Afghan hound;Peruvian hairless dog|peruvian hairless|perro sin pelo;Xoloitzcuintli|xolo;Basenji;Borzoi;Komondor;Puli;Lagotto romagnolo;Otterhound;Azawakh;Mudi"},
+ {q:"Name a vegetable", a:"Carrot;Broccoli;Potato;Lettuce;Tomato;Onion;Spinach;Cucumber;Corn;Pepper|bell pepper;Cauliflower;Cabbage;Peas|pea;Celery;Zucchini|courgette;Garlic;Eggplant|aubergine;Green beans|green bean;Sweet potato;Mushroom;Kale;Asparagus;Pumpkin;Beet|beetroot;Radish;Brussels sprouts|brussel sprouts;Artichoke;Leek;Squash;Turnip;Okra;Parsnip;Bok choy;Chard|swiss chard;Arugula|rocket;Yam;Cassava|yuca|manioc;Fennel;Kohlrabi;Rutabaga;Watercress;Jicama;Endive;Daikon;Celeriac;Chayote;Romanesco;Sunchoke|jerusalem artichoke;Olluco|ulluco;Oca;Fiddlehead;Salsify;Samphire;Mashua"},
+ {q:"Name a city in Asia", a:"Tokyo;Beijing;Seoul;Shanghai;Bangkok;Hong Kong;Singapore;Dubai;Mumbai;Delhi|new delhi;Kyoto;Osaka;Manila;Jakarta;Kuala Lumpur;Hanoi;Taipei;Istanbul;Ho Chi Minh City|saigon;Kathmandu;Karachi;Dhaka;Kolkata;Bangalore|bengaluru;Tehran;Riyadh;Doha;Shenzhen;Guangzhou;Busan;Chennai;Lahore;Colombo;Phnom Penh;Hiroshima;Yangon;Chengdu;Ulaanbaatar;Sapporo;Chiang Mai;Almaty;Tashkent;Kabul;Baku;Tbilisi;Muscat;Lhasa;Samarkand;Thimphu;Vientiane;Bishkek;Luang Prabang;Dushanbe;Malé|male;Ashgabat"},
+ {q:"Name a type of tree", a:"Oak;Pine;Maple;Palm;Birch;Willow;Apple;Cherry;Redwood;Cedar;Spruce;Fir;Elm;Sequoia;Ash;Cypress;Baobab;Eucalyptus;Magnolia;Aspen;Beech;Sycamore;Poplar;Chestnut;Walnut;Olive;Banyan;Juniper;Mahogany;Hemlock;Larch;Teak;Dogwood;Hickory;Ginkgo;Acacia;Yew;Linden;Alder;Mangrove;Hawthorn;Jacaranda;Rowan;Cottonwood;Ceiba|kapok;Rubber tree;Monkey puzzle;Bristlecone pine;Lignum vitae;Dragon blood tree;Quebracho;Queñua|polylepis;Wollemi pine"},
+ {q:"Name a bird", a:"Eagle;Parrot;Penguin;Owl;Robin;Pigeon;Crow;Flamingo;Sparrow;Hummingbird;Chicken;Duck;Swan;Peacock;Hawk;Ostrich;Seagull|gull;Cardinal;Falcon;Blue jay;Toucan;Woodpecker;Pelican;Goose;Turkey;Crane;Vulture;Condor;Raven;Emu;Kiwi;Stork;Heron;Finch;Canary;Macaw;Albatross;Kingfisher;Magpie;Puffin;Cockatoo;Lovebird;Roadrunner;Ibis;Quetzal;Kookaburra;Hoopoe;Cassowary;Shoebill;Booby;Oystercatcher;Nightjar;Cock-of-the-rock|cock of the rock|tunki;Potoo;Hoatzin;Kakapo"},
+ {q:"Name a dessert", a:"Ice cream;Cake;Cookie|cookies;Brownie;Pie;Cheesecake;Chocolate;Cupcake;Pudding;Donut|doughnut;Apple pie;Tiramisu;Flan;Churros|churro;Crème brûlée|creme brulee;Mousse;Macaron;Waffle;Crepe;Gelato;Sorbet;Cannoli;Baklava;Tres leches;Panna cotta;Eclair;Mochi;Pavlova;Fudge;Tart;Crumble;Cobbler;Arroz con leche|rice pudding;Alfajor|alfajores;Profiterole;Trifle;Strudel;Dulce de leche;Brigadeiro;Picarones;Suspiro limeño|suspiro a la limena;Gulab jamun;Mazamorra morada;Halva;Knafeh|kunafa;Sticky toffee pudding;Lamington;Kheer;Sachertorte;Clafoutis;Halo-halo|halo halo;Kulfi;Semifreddo;Zabaglione;Bibingka;Basbousa"}
+];
+
+/* more answers: "mid" ones are spread through the middle of each list, "rare" ones go at the end */
+const EXTRA={
+ "Name a fruit":{mid:"Clementine;Honeydew;Avocado;Blood orange;Cranberry;Mulberry;Plantain;Tomato;Olive",rare:"Granadilla;Aguaymanto|goldenberry|physalis|cape gooseberry;Yuzu;Breadfruit;Tamarillo;Sapote;Longan;Pepino|pepino dulce;Camu camu;Tumbo|banana passionfruit;Aguaje;Pitanga|surinam cherry;Ackee;Medlar;Cloudberry;Lingonberry;Marula;Ugli fruit;Miracle fruit;Langsat"},
+ "Name an animal that lives in the ocean":{mid:"Salmon;Cod;Blue whale;Humpback whale;Great white shark;Mussel;Scallop;Plankton;Flounder;Grouper;Halibut;Parrotfish;Hammerhead shark",rare:"Mantis shrimp;Anchoveta|peruvian anchoveta;Humboldt squid;Box jellyfish;Portuguese man o war;Blobfish;Leafy sea dragon;Oarfish;Giant isopod|isopod;Goblin shark;Frilled shark;Dumbo octopus;Garden eel;Comb jelly;Gulper eel;Sea butterfly;Yeti crab;Sea spider;Pyrosome"},
+ "Name a country in South America":{rare:"Falkland Islands|falklands|malvinas|islas malvinas;South Georgia"},
+ "Name a color":{mid:"Rose;Cream;Plum;Lilac;Emerald;Sky blue;Ruby;Sapphire;Jade;Copper;Bronze;Rust;Charcoal;Forest green;Wine",rare:"Byzantium;Heliotrope;Cinnabar;Gainsboro;Razzmatazz;Atomic tangerine;Wenge;Gamboge;Glaucous;Coquelicot;Falu red;Xanadu;Feldgrau;Zaffre;Fulvous;Smaragdine;Eburnean;Sarcoline"},
+ "Name something you find in a kitchen":{mid:"Glass;Chopsticks;Teapot;Jar;Paper towel;Aluminum foil|foil|tin foil;Plastic wrap|cling film;Baking sheet|oven tray;Rice cooker;Air fryer;Slow cooker|crockpot;Spice rack;Toothpick;Lunchbox;Thermos;Muffin tin;Pizza cutter;Ice cube tray|ice tray;Dutch oven",rare:"Molcajete;Batán|batan;Tagine;Bench scraper;Offset spatula;Egg separator;Pastry blender;Dehydrator;Sous vide;Cocotte;Mezzaluna;Bain-marie|bain marie;Chinois;Spurtle;Tamis;Salamander"},
+ "Name a musical instrument":{mid:"Electric guitar;Snare drum;Bass drum;Gong;Bells|bell|handbell;Cowbell;Kazoo;Castanets;Bugle;Conga;Djembe;Timpani;Cornet;Euphonium;Harpsichord;Flugelhorn",rare:"Bandoneón|bandoneon;Bombo;Quijada|jawbone;Balalaika;Handpan|hang drum;Shakuhachi;Guzheng;Pipa;Cuatro;Celesta;Kora;Mbira;Contrabassoon;Nyckelharpa;Gusli;Sackbut;Glass harmonica;Serpent;Crwth;Ondes Martenot"},
+ "Name a sport":{mid:"Futsal;Formula 1|f1|car racing|racing;Horse racing;Figure skating;Speed skating;Diving;Weightlifting;Powerlifting;Marathon;MMA|mixed martial arts;Kickboxing;Dodgeball;Ultimate frisbee|frisbee;Padel|paddle;BMX;Motocross;Canoeing;Billiards|pool;Snooker;Parkour;Artistic swimming|synchronized swimming",rare:"Sandboarding;Frontón|fronton|paleta fronton;Capoeira;Roller derby;Teqball;Footvolley;Sambo;Hapkido;Bandy;Shinty;Fistball;Kin-ball|kinball;Pesäpallo|pesapallo;Buzkashi;Chess boxing;Cheese rolling;Bog snorkelling|bog snorkeling;Wife carrying;Toe wrestling"},
+ "Name a part of the body":{mid:"Nails|nail|fingernail;Bones|bone;Muscle;Skull;Throat;Jaw;Palm;Waist;Belly;Eyelid;Armpit;Veins|vein;Intestines|intestine|gut;Bladder;Temple;Pinky|little finger;Kneecap|patella;Shoulder blade|scapula;Tailbone|coccyx",rare:"Sternum;Thymus;Epiglottis;Duodenum;Hypothalamus;Pineal gland;Hyoid;Tragus;Glabella;Lunula;Hallux;Canthus;Axilla;Popliteal fossa;Purlicue"},
+ "Name a dog breed":{mid:"Labradoodle;Goldendoodle;Cockapoo;Boston terrier;Cavalier king charles spaniel|cavalier;Shetland sheepdog|sheltie;Collie|rough collie;Alaskan malamute|malamute;Belgian malinois|malinois;Cane corso;Bull terrier;Irish setter;Great pyrenees;West highland terrier|westie;Scottish terrier|scottie;Rhodesian ridgeback",rare:"Leonberger;Briard;Bedlington terrier;Catahoula;Thai ridgeback;Swedish vallhund;Kai ken;Chinook;Kooikerhondje;Bergamasco;Dandie dinmont terrier|dandie dinmont;Cesky terrier;Sloughi;Stabyhoun;Norwegian lundehund;Telomian"},
+ "Name a vegetable":{mid:"Green onion|scallion|spring onion;Shallot;Ginger;Chili|chilli|chile|aji;Jalapeño|jalapeno;Chickpeas|chickpea|garbanzo;Lentils|lentil;Lima beans|lima bean|pallares;Edamame;Snow peas|snow pea;Bean sprouts;Collard greens|collards;Butternut squash;Acorn squash;Water chestnut",rare:"Taro;Lotus root;Nopal|nopales|cactus;Maca;Yacón|yacon;Tarwi|chocho|lupini;Arracacha;Achira;Malanga;Burdock|gobo;Cardoon;Ramps;Purslane;Sea kale;Skirret;Crosne;Mauka"},
+ "Name a city in Asia":{mid:"Jerusalem;Tel Aviv;Abu Dhabi;Beirut;Amman;Baghdad;Damascus;Macau;Yokohama;Nagoya;Fukuoka;Nara;Incheon;Hangzhou;Nanjing;Xi'an|xian;Wuhan;Chongqing;Harbin;Hyderabad;Pune;Jaipur;Agra;Varanasi;Islamabad;Phuket;Cebu;Surabaya;Yogyakarta;Penang|george town",rare:"Siem Reap;Hoi An;Hue;Mandalay;Bagan;Kandy;Jeju;Gyeongju;Kanazawa;Davao;Iloilo;Ipoh;Kuching;Battambang;Leh;Shillong;Kashgar;Ürümqi|urumqi;Vladivostok;Novosibirsk;Yerevan;Nizwa;Bukhara;Khiva;Herat;Sanaa;Aden"},
+ "Name a type of tree":{mid:"Orange;Lemon;Pear;Plum;Peach;Fig;Holly;Laurel;Horse chestnut;Buckeye;Locust;Catalpa;Tamarind;Neem;Sandalwood;Ebony;Balsa;Cork oak;Joshua tree;Sassafras",rare:"Algarrobo;Huarango;Molle|pepper tree;Quina|cinchona;Tara;Lupuna;Shihuahuaco;Ombú|ombu;Kauri;Rimu;Bunya pine;Paulownia;Tupelo;Osage orange;Hornbeam;Zelkova;Katsura;Sourwood;Wingnut;Stinkwood"},
+ "Name a bird":{mid:"Dove;Hen;Rooster;Blackbird;Starling;Swallow;Wren;Bluebird;Oriole;Mockingbird;Parakeet|budgie|budgerigar;Cockatiel;Quail;Pheasant;Partridge;Lark;Nightingale;Egret;Loon;Grouse;Sandpiper;Osprey;Kestrel;Barn owl",rare:"Harpy eagle;Hornbill;Lyrebird;Bowerbird;Kea;Secretary bird;Inca tern;Andean flicker;Marvelous spatuletail;Guanay cormorant|guanay;Peruvian booby;Frogmouth;Jacana;Sunbittern;Oilbird;Takahe;Weka;Bearded vulture|lammergeier;Wallcreeper;Superb fairywren|fairywren"},
+ "Name a dessert":{mid:"Popsicle|ice pop|ice lolly;Milkshake;Sundae;Banana split;Muffin;Croissant;Cinnamon roll;Carrot cake;Red velvet cake|red velvet;Black forest cake;Pecan pie;Pumpkin pie;Key lime pie;Lemon tart;Shortcake|strawberry shortcake;Bread pudding;Meringue;Caramel;Cotton candy|candy floss;Candy;S'mores|smores;Parfait;Jello|jelly;Granita",rare:"King kong;Turrón de doña pepa|turron de dona pepa|turron;Mille-feuille|millefeuille|napoleon;Pastel de nata;Canelé|canele;Paris-brest|paris brest;Kouign-amann|kouign amann;Babka;Pionono;Cocada;Quindim;Queso helado;Ranfañote|ranfanote;Champús|champus;Frejol colado;Taiyaki;Dango;Bingsu;Cendol;Malva pudding;Kue lapis"}
+};
+RAW.forEach(p=>{
+  const ex=EXTRA[p.q]; if(!ex) return;
+  const list=p.a.split(";"), mids=ex.mid?ex.mid.split(";"):[];
+  const lo=Math.round(list.length*0.3), hi=Math.round(list.length*0.72);
+  mids.forEach((m,k)=>list.splice(lo+Math.round((hi-lo)*(k+0.5)/mids.length)+k,0,m));
+  if(ex.rare) list.push(...ex.rare.split(";"));
+  p.a=list.join(";");
+});
+
+const NEW_RAW = [
+ {q:"Name something you can break without touching it", a:"A promise|promise;A heart|heart|someone's heart;The silence|silence;A record|record|world record;The ice|ice;A rule|rule|the rules|rules;The law|law;Trust|someone's trust;A habit|habit|bad habit;The news|news;Your word|word|my word;A deal|deal;A tie|tie;A streak|streak|winning streak;A curse|curse;A spell|spell;Character|break character;A code|code;A vow|vow;An oath|oath;The sound barrier|sound barrier;The fourth wall|fourth wall;Someone's concentration|concentration|focus;Someone's spirit|spirit;The tension|tension;A cycle|cycle;A routine|routine;A contract|contract;A sweat|sweat;The bank|bank;Even|break even;Free|break free;A leg|leg|break a leg;The mold|mold|mould;A pattern|pattern;A stalemate|stalemate|deadlock;A truce|truce|ceasefire;A fever|fever;A siege|siege;A fast|fast"},
+ {q:"Name an animal that's also a verb", a:"Duck;Fish;Bug;Bear;Fox;Monkey;Dog;Rat;Chicken;Parrot;Badger;Wolf;Horse;Pig;Ape;Bat;Hound;Crow;Hawk;Ferret;Weasel;Worm;Squirrel;Snake;Seal;Swallow;Fly;Cow;Clam;Crab;Hog;Skunk;Slug;Goose;Beaver;Buffalo;Crane;Leech;Kid;Ram;Buck;Whale;Pony;Louse;Steer;Lark;Quail;Snipe;Flounder;Carp;Rook;Gull;Grouse"},
+ {q:"Name something that comes in pairs", a:"Socks|sock;Shoes|shoe;Earrings|earring;Eyes|eye;Twins|twin;Gloves|glove;Ears|ear;Chopsticks|chopstick;Hands|hand;Feet|foot;Dice|die;Lungs|lung;Legs|leg;Arms|arm;Glasses|sunglasses|eyeglasses;Pants|trousers;Scissors;Headphones|earbuds|earphones;Boots|boot;Kidneys|kidney;Jeans;Shorts;Slippers|slipper;Wings|wing;Contact lenses|contacts|contact lens;Sneakers|trainers;Sandals|sandal;Flip flops|flip-flops;Mittens|mitten;Skis|ski;Eyebrows|eyebrow;Shoelaces|shoelace|laces;Salt and pepper;Parents;Lips;Nostrils|nostril;Binoculars;Pliers;Tweezers;Tongs;Handcuffs;Drumsticks|drumstick;Speakers|speaker;Headlights|headlight;Earmuffs;Goggles;Ice skates|skates;Roller skates;Pajamas|pyjamas;Underwear|boxers;Tights;Leggings;Suspenders;Cufflinks|cufflink;Bookends|bookend;Oars|oar;Pedals|pedal;Dumbbells|dumbbell;Crutches|crutch;Boxing gloves;Cymbals;Maracas;Knitting needles;Wedding rings|rings;Windshield wipers|wipers;Training wheels;Antlers;Horns;Tusks;Antennae|antennas;Pincers|claws;Flippers;Fins;Dance partners|dance partner;Lovebirds;Aces|pair of aces;Tonsils;Ovaries;Stilts;Snowshoes;Castanets"},
+ {q:"Name something you'd find at the bottom of your bag", a:"Keys|key;Coins|loose change|change|coin;Receipts|receipt;Pens|pen;Crumbs|crumb;Gum|chewing gum;Hair tie|hair ties|hair elastic|scrunchie;Lip balm|chapstick;Tissues|tissue|kleenex;Wrappers|wrapper|candy wrapper|gum wrapper;Charger|phone charger;Earbuds|headphones;Lipstick;Wallet;Phone;Sunglasses;Mints|mint;Hand sanitizer|sanitizer;Bobby pins|bobby pin;Hair clip;Lighter;Snacks|snack;Water bottle;Umbrella;Notebook;Sand;Lint;Pencil;Band-aid|bandaid|plaster;Old ticket|tickets|ticket;Bus card|transit card|metro card;Earring|lone earring;Safety pin;Paper clip;USB stick|usb|flash drive;Keychain;Coupon;Business card;Glitter;Dust;Tampon|pad;Cough drop;Rubber band;Granola bar;Toothpick;Nail file;Mirror|compact mirror;Comb|hairbrush|brush;Perfume;Mascara;Hand cream|lotion;Floss;Sticker;Button;Bottle cap;Matches;Gift card;Guitar pick;Playing card;Pebble|rock;Seashell;Leaf;Battery;Stamp;Sewing kit;Tape measure;Bottle opener;Dice"},
+ {q:"Name a job that didn't exist 30 years ago", a:"Influencer|social media influencer;YouTuber|content creator;App developer|app designer;Uber driver|rideshare driver|lyft driver;Social media manager;TikToker;Streamer|twitch streamer;Podcaster;Data scientist;Drone pilot|drone operator;Esports player|pro gamer|professional gamer;Blogger;Vlogger;SEO specialist|seo;AI engineer|machine learning engineer;Prompt engineer;Crypto trader|cryptocurrency trader;Blockchain developer;Cloud engineer|cloud architect;Airbnb host;Delivery app driver|uber eats driver|doordash driver|rappi driver;Instagram model;Digital marketer|digital marketing specialist;Virtual assistant;Content moderator;NFT artist;Etsy seller;Dropshipper;Growth hacker;Podcast producer;Esports caster|shoutcaster;Twitch moderator;Data annotator|data labeler;AI trainer;AI ethicist;Chief AI officer;Self-driving car engineer|autonomous vehicle engineer;EV technician|electric car mechanic;3D printing technician;Vertical farmer;Chatbot developer;Metaverse architect;Bug bounty hunter;Personal brand consultant;Esports coach"},
+ {q:"Name a country whose name ends in \"-stan\"", a:"Pakistan;Afghanistan;Kazakhstan;Uzbekistan;Turkmenistan;Tajikistan;Kyrgyzstan|kirghizstan|kyrgystan"},
+ {q:"Name one of the first 151 Pokémon", a:"Pikachu;Charizard;Bulbasaur;Squirtle;Charmander;Mewtwo;Mew;Eevee;Snorlax;Jigglypuff;Gengar;Psyduck;Meowth;Gyarados;Magikarp;Ditto;Dragonite;Blastoise;Venusaur;Lapras;Vaporeon;Jolteon;Flareon;Raichu;Onix;Arcanine;Growlithe;Vulpix;Ninetales;Machamp;Alakazam;Abra;Kadabra;Haunter;Gastly;Articuno;Zapdos;Moltres;Clefairy;Wigglytuff;Pidgey;Pidgeotto;Pidgeot;Rattata;Raticate;Caterpie;Metapod;Butterfree;Weedle;Kakuna;Beedrill;Zubat;Golbat;Geodude;Graveler;Golem;Cubone;Marowak;Charmeleon;Wartortle;Ivysaur;Dratini;Dragonair;Aerodactyl;Kabuto;Kabutops;Omanyte;Omastar;Scyther;Pinsir;Jynx;Electabuzz;Magmar;Mr. Mime|mr mime;Lickitung;Chansey;Hitmonlee;Hitmonchan;Kangaskhan;Tauros;Porygon;Staryu;Starmie;Horsea;Seadra;Goldeen;Tentacool;Tentacruel;Shellder;Cloyster;Slowpoke;Slowbro;Magnemite;Magneton;Voltorb;Electrode;Koffing;Weezing;Ekans;Arbok;Sandshrew;Sandslash;Nidoran♀|nidoran f|nidoran female|nidoran;Nidorina;Nidoqueen;Nidoran♂|nidoran m|nidoran male;Nidorino;Nidoking;Clefable;Oddish;Gloom;Vileplume;Paras;Parasect;Venonat;Venomoth;Diglett;Dugtrio;Persian;Golduck;Mankey;Primeape;Poliwag;Poliwhirl;Poliwrath;Machop;Machoke;Bellsprout;Weepinbell;Victreebel;Ponyta;Rapidash;Farfetch'd|farfetchd;Doduo;Dodrio;Seel;Dewgong;Grimer;Muk;Drowzee;Hypno;Krabby;Kingler;Exeggcute;Exeggutor;Rhyhorn;Rhydon;Tangela;Spearow;Fearow;Seaking"},
+ {q:"Name a mountain range, desert or region that crosses more than one country", a:"Andes|andes mountains;Alps;Himalayas|himalaya;Sahara|sahara desert;Amazon|amazon rainforest|amazonia;Rocky Mountains|rockies;Scandinavia;Balkans;Middle East;Patagonia;Central America;Caribbean;Mesopotamia;Pyrenees;Gobi Desert|gobi;Arabian Desert;Kurdistan;Basque Country|pais vasco;Catalonia|catalan countries;Lapland|sapmi;Kashmir;Atacama Desert|atacama;Kalahari Desert|kalahari;Appalachian Mountains|appalachians;Carpathians|carpathian mountains;Caucasus|caucasus mountains;Great Lakes;Sahel;Horn of Africa;Maghreb;Levant;Iberian Peninsula|iberia;Baltics|baltic states;Benelux|low countries;Arabian Peninsula;Southeast Asia;Central Asia;Indochina;Atlas Mountains;Hindu Kush;Karakoram;Tibetan Plateau|tibet;Ural Mountains|urals;Sonoran Desert;Chihuahuan Desert;Namib Desert|namib;Great Rift Valley|rift valley;Congo Basin|congo rainforest;Serengeti;Altiplano;Gran Chaco|chaco;Pantanal;Tierra del Fuego;Guiana Shield|the guianas;Arctic;Borneo;New Guinea;Hispaniola;Punjab;Bengal;Thar Desert;Balochistan;Ferghana Valley;Pamir|pamir mountains;Tian Shan;Altai Mountains|altai;Eurasian Steppe|steppe;Ardennes;Tyrol;Silesia;Flanders;Karelia;Istria;Thrace;Macedonia;Golden Triangle;Dinaric Alps;Ethiopian Highlands"},
+ {q:"Name a country with at least one star on its national flag", a:"United States|usa|us|america|united states of america;China;Vietnam;Brazil;Australia;Israel;Turkey|turkiye;Chile;Cuba;New Zealand;Pakistan;Morocco;North Korea;Venezuela;Philippines;Ghana;Algeria;Malaysia;Singapore;Somalia;Panama;Honduras;Syria;Jordan;Ethiopia;Senegal;Cameroon;Tunisia;Paraguay;Bosnia and Herzegovina|bosnia;Croatia;Slovenia;Myanmar|burma;Mozambique;Angola;Zimbabwe;Liberia;Libya;Togo;Burkina Faso;Papua New Guinea;Suriname;Nepal;Kosovo;Uzbekistan;Tajikistan;Turkmenistan;Azerbaijan;DR Congo|drc|democratic republic of the congo|congo kinshasa;Central African Republic|car;South Sudan;Mauritania;Djibouti;Burundi;Cape Verde|cabo verde;Guinea-Bissau|guinea bissau;Equatorial Guinea;East Timor|timor-leste|timor leste;Samoa;Solomon Islands;Dominica;Grenada;Saint Kitts and Nevis|st kitts and nevis|st kitts;Micronesia;Marshall Islands;Tuvalu;Nauru;Comoros;Sao Tome and Principe|são tomé and príncipe"},
+ {q:"Name an ancient wonder or monument (built before the year 1500)", a:"Pyramids of Giza|pyramids|great pyramid|great pyramid of giza|egyptian pyramids;Great Wall of China|great wall;Colosseum|coliseum;Machu Picchu;Stonehenge;Parthenon;Acropolis;Great Sphinx|sphinx;Petra;Chichen Itza;Angkor Wat;Hanging Gardens of Babylon|hanging gardens;Colossus of Rhodes;Lighthouse of Alexandria|pharos;Temple of Artemis;Statue of Zeus at Olympia|statue of zeus;Mausoleum at Halicarnassus;Moai|easter island statues|easter island heads;Pantheon;Teotihuacan;Terracotta Army|terracotta warriors;Roman Forum;Leaning Tower of Pisa|tower of pisa;Hagia Sophia;Notre-Dame|notre dame;Pompeii;Nazca Lines;Alhambra;Abu Simbel;Valley of the Kings;Karnak|karnak temple;Tikal;Hadrian's Wall;Borobudur;Knossos;Persepolis;Mont Saint-Michel;Sacsayhuamán|sacsayhuaman;Chan Chan;Caral;Kuélap|kuelap;Great Zimbabwe;Pont du Gard;Aqueduct of Segovia;Palenque;Ephesus|library of celsus;Delphi;Troy;Baalbek;Palmyra;Ishtar Gate;Ziggurat of Ur;Mohenjo-daro;Lalibela|rock-hewn churches of lalibela;Ellora Caves;Ajanta Caves;Bagan;Sigiriya;Newgrange;Göbekli Tepe|gobekli tepe;Carnac stones;Skara Brae;Tiwanaku;Ollantaytambo;Monte Albán|monte alban;Uxmal;Copán|copan;Mesa Verde;Cahokia;Great Pyramid of Cholula|cholula;Axum obelisks|aksum;Leptis Magna;Carthage;Hattusa;Derinkuyu;Mycenae|lion gate;Arch of Constantine;Baths of Caracalla;Circus Maximus;Erechtheion;Tomb of Cyrus;Sanchi Stupa"},
+ {q:"Name something people are scared of", a:"Spiders|spider;Heights;Snakes|snake;The dark|dark|darkness;Death|dying;Clowns|clown;Ghosts|ghost;Sharks|shark;Public speaking;Needles|needle|shots;Being alone|loneliness;Failure;Flying|planes;Bugs|insects;Monsters|monster;Rejection;Thunder|thunderstorms|lightning|storms;Dogs|dog;Small spaces|tight spaces|enclosed spaces;The ocean|ocean|deep water;Rats|mice|rat|mouse;The dentist|dentist;Cockroaches|cockroach|roaches;Bees|wasps|bee;Crowds;Zombies|zombie;Fire;Drowning;Getting old|aging;Strangers;Blood;Germs;Change;The future;Commitment;Holes|trypophobia;Dolls|doll;Elevators;Driving;Earthquakes;Tornadoes;War;Demons;Aliens;Bridges;Birds;Mirrors;Exams|tests;Hospitals;Doctors;Masks;Puppets;Friday the 13th|number 13;Balloons;Butterflies;Feet;Beards;Buttons;Cotton balls;Long words"},
+ {q:"Name a chess piece", a:"King;Queen;Pawn;Knight|horse;Bishop;Rook|castle|tower"},
+ {q:"Name a Harry Potter character", a:"Harry Potter|harry;Hermione Granger|hermione;Ron Weasley|ron;Albus Dumbledore|dumbledore;Lord Voldemort|voldemort|tom riddle;Severus Snape|snape;Rubeus Hagrid|hagrid;Draco Malfoy|draco|malfoy;Sirius Black|sirius;Dobby;Neville Longbottom|neville;Luna Lovegood|luna;Ginny Weasley|ginny;Fred Weasley|fred;George Weasley|george;Minerva McGonagall|mcgonagall;Bellatrix Lestrange|bellatrix;Lucius Malfoy|lucius;Hedwig;Dudley Dursley|dudley;Cedric Diggory|cedric;Remus Lupin|lupin;Dolores Umbridge|umbridge;Moaning Myrtle|myrtle;Cho Chang|cho;Lily Potter|lily;James Potter|james;Molly Weasley|molly;Arthur Weasley|arthur;Percy Weasley|percy;Vernon Dursley|vernon;Petunia Dursley|petunia;Mad-Eye Moody|alastor moody|moody;Nymphadora Tonks|tonks;Peter Pettigrew|wormtail|pettigrew;Gilderoy Lockhart|lockhart;Kreacher;Fawkes;Buckbeak;Crookshanks;Scabbers;Nagini;Fluffy;Aragog;Argus Filch|filch;Mrs Norris;Peeves;Nearly Headless Nick;Bill Weasley|bill;Charlie Weasley|charlie;Professor Sprout|sprout;Filius Flitwick|flitwick;Sybill Trelawney|trelawney;Horace Slughorn|slughorn;Quirinus Quirrell|quirrell;Fleur Delacour|fleur;Viktor Krum|krum;Gellert Grindelwald|grindelwald;Newt Scamander|newt;Cornelius Fudge|fudge;Kingsley Shacklebolt|kingsley;Garrick Ollivander|ollivander;Lavender Brown|lavender;Seamus Finnigan|seamus;Dean Thomas;Oliver Wood;Vincent Crabbe|crabbe;Gregory Goyle|goyle;Narcissa Malfoy|narcissa;Rita Skeeter;Griphook;Madam Pomfrey|pomfrey;Madam Hooch|hooch;Firenze;Grawp;Winky;Barty Crouch Jr;Barty Crouch Sr|barty crouch;Igor Karkaroff|karkaroff;Madame Maxime|maxime;Pansy Parkinson|pansy;Xenophilius Lovegood|xenophilius;Aberforth Dumbledore|aberforth;Ariana Dumbledore|ariana;Colin Creevey|colin;Cormac McLaggen|cormac;Romilda Vane;Lee Jordan;Angelina Johnson|angelina;Katie Bell;Hannah Abbott;Ernie Macmillan;Rufus Scrimgeour|scrimgeour;Ludo Bagman|bagman;Gabrielle Delacour;Fenrir Greyback|greyback;Antonin Dolohov|dolohov;Yaxley;Pius Thicknesse;Bathilda Bagshot;Arabella Figg|mrs figg;Elphias Doge;Dedalus Diggle;The Grey Lady|helena ravenclaw;The Bloody Baron;The Fat Friar;The Fat Lady;Bane;Bertha Jorkins;Frank Bryce;Mundungus Fletcher|mundungus"},
+ {q:"Name an element on the periodic table", a:"Oxygen;Hydrogen;Gold;Carbon;Iron;Helium;Silver;Nitrogen;Sodium;Copper;Calcium;Chlorine;Aluminum|aluminium;Uranium;Lead;Zinc;Potassium;Neon;Mercury;Platinum;Lithium;Magnesium;Sulfur|sulphur;Plutonium;Titanium;Tin;Silicon;Iodine;Fluorine;Phosphorus;Nickel;Argon;Radium;Cobalt;Chromium;Krypton;Xenon;Radon;Boron;Beryllium;Manganese;Tungsten;Bromine;Arsenic;Cesium|caesium;Barium;Strontium;Polonium;Einsteinium;Curium;Nobelium;Americium;Californium;Bismuth;Selenium;Germanium;Gallium;Cadmium;Iridium;Osmium;Palladium;Rhodium;Thorium;Neptunium;Francium;Rubidium;Tellurium;Antimony;Indium;Thallium;Vanadium;Scandium;Zirconium;Molybdenum;Niobium;Tantalum;Hafnium;Rhenium;Ruthenium;Technetium;Astatine;Actinium;Protactinium;Yttrium;Lanthanum;Cerium;Neodymium;Europium;Gadolinium;Promethium;Samarium;Praseodymium;Terbium;Dysprosium;Holmium;Erbium;Thulium;Ytterbium;Lutetium;Berkelium;Fermium;Mendelevium;Lawrencium;Rutherfordium;Dubnium;Seaborgium;Bohrium;Hassium;Meitnerium;Darmstadtium;Roentgenium;Copernicium;Nihonium;Flerovium;Moscovium;Livermorium;Tennessine;Oganesson"},
+ {q:"Name one of the 88 official constellations", a:"Orion;Ursa Major|great bear;Ursa Minor|little bear;Scorpius|scorpio;Leo;Cassiopeia;Gemini;Taurus;Aries;Cancer;Virgo;Libra;Sagittarius;Capricornus|capricorn;Aquarius;Pisces;Draco;Pegasus;Andromeda;Cygnus;Lyra;Perseus;Hercules;Crux|southern cross;Canis Major;Canis Minor;Centaurus;Aquila;Phoenix;Hydra;Cepheus;Boötes|bootes;Auriga;Corona Borealis;Ophiuchus;Lupus;Lepus;Monoceros;Corvus;Delphinus;Sagitta;Vulpecula;Lacerta;Lynx;Leo Minor;Camelopardalis;Coma Berenices;Canes Venatici;Serpens;Eridanus;Cetus;Columba;Carina;Puppis;Vela;Pyxis;Antlia;Crater;Sextans;Triangulum;Triangulum Australe;Corona Australis;Ara;Norma;Circinus;Musca;Chamaeleon;Apus;Pavo;Grus;Tucana;Indus;Octans;Mensa;Volans;Dorado;Pictor;Caelum;Horologium;Reticulum;Hydrus;Fornax;Sculptor;Telescopium;Piscis Austrinus;Equuleus;Scutum;Microscopium"},
+ {q:"Name a country that has hosted the Olympic Games (Summer or Winter)", a:"United States|usa|us|america;Greece;China;France;United Kingdom|uk|great britain|britain|england;Japan;Brazil;Australia;Russia|soviet union|ussr;Italy;Germany;Spain;Canada;South Korea|korea;Mexico;Norway;Switzerland;Sweden;Netherlands|holland;Belgium;Austria;Finland;Bosnia and Herzegovina|bosnia|yugoslavia"},
+ {q:"Name something that is yellow", a:"Banana;The sun|sun;Lemon;School bus;Taxi|cab|new york taxi;Corn;Sunflower;Rubber duck|duck;Cheese;Egg yolk|yolk;Butter;Minions|minion;SpongeBob;Pikachu;Mustard;Highlighter;Pencil;Tennis ball;Gold;Daffodil;Canary;Chick;Honey;Lemonade;Smiley face|emoji;Traffic light;Caution sign|warning sign;Tulip;Yellow pepper|bell pepper;Squash;Star;Sticky note|post-it;Raincoat;Hard hat;Bulldozer|excavator;Lightning bolt;Tweety;Big Bird;Homer Simpson|the simpsons|simpsons;Bart Simpson;Winnie the Pooh|pooh;Pac-Man|pacman;Yellow Submarine;Popcorn;Pineapple;Mango;Sulfur;Saffron;Turmeric;Curry;Custard;Dandelion;Buttercup;Marigold;Goldfinch;Yellow jacket;Lemon shark;Yellow tang;Banana slug;Caution tape;Yellow card;Yellow jersey;Citrine;Topaz"},
+ {q:"Name something that has wheels", a:"Car;Bike|bicycle;Bus;Truck;Motorcycle|motorbike;Skateboard;Train;Scooter;Wheelchair;Shopping cart|trolley;Wagon;Stroller|pram;Tricycle;Airplane|plane;Roller skates;Suitcase|luggage;Office chair|chair;Wheelbarrow;Tractor;Taxi;Ambulance;Fire truck|fire engine;Police car;Van;Golf cart;Go-kart|go kart;Rollerblades|inline skates;Hoverboard;Segway;Unicycle;Toy car;Lawn mower;Carriage;Chariot;Rickshaw|tuk tuk|mototaxi;Forklift;Trailer;RV|camper;Limousine|limo;Monster truck;Cannon;Tram|streetcar;Subway|metro;Food truck;Hospital bed;Hand truck|dolly;Cooler;Rolling backpack;Piano;Mars rover|rover;Tank;Ice cream cart;Hot dog stand;Mop bucket;Crane"},
+ {q:"Name a mythical creature", a:"Dragon;Unicorn;Mermaid;Phoenix;Vampire;Werewolf;Fairy;Centaur;Griffin|gryphon;Pegasus;Minotaur;Bigfoot|sasquatch;Loch Ness Monster|nessie;Medusa;Kraken;Yeti;Goblin;Troll;Elf;Hydra;Cyclops;Siren;Gnome;Ogre;Chupacabra;Leprechaun;Sphinx;Genie|djinn|jinn;Banshee;Basilisk;Dwarf;Giant;Harpy;Satyr|faun;Nymph;Cerberus;Chimera;Kitsune;Kelpie;Wendigo;Mothman;Golem;Gorgon;Manticore;Hippogriff;Thunderbird;Kappa;Wyvern;Leviathan;Selkie;Krampus;Jackalope;Tengu;Naga;Garuda;Bunyip;Roc;Cockatrice;Qilin;Baku;Simurgh;Pishtaco;Tikbalang;Aswang;Duende;Nuckelavee;Tarasque;Mokele-mbembe"},
+ {q:"Name a Greek god or goddess", a:"Zeus;Poseidon;Hades;Athena;Aphrodite;Apollo;Ares;Hermes;Artemis;Hera;Dionysus;Hephaestus;Demeter;Persephone;Eros;Nike;Gaia;Kronos|cronus;Hestia;Hecate;Pan;Nemesis;Helios;Atlas;Prometheus;Selene;Eos;Iris;Hypnos;Morpheus;Thanatos;Nyx;Uranus;Rhea;Hebe;Tyche;Triton;Oceanus;Hyperion;Themis;Mnemosyne;Asclepius;Eris;Chaos;Erebus;Tartarus;Amphitrite;Aeolus;Boreas;Zephyrus;Phobos;Deimos;Harmonia;Hygieia;Nereus;Proteus;Pontus;Metis;Leto;Thetis;Ananke;Priapus;Hymenaeus|hymen"},
+ {q:"Name a power or ability a character has in the MCU", a:"Super strength|strength;Flight|flying;Super speed|speed;Telekinesis;Shrinking|shrink;Healing factor|healing|regeneration;Invisibility;Web-slinging|webs|web shooting;Spider-sense|spidey sense;Wall-crawling|wall climbing;Teleportation;Magic|sorcery;Shapeshifting;Mind control;Telepathy;Lightning|electricity;Turning into the Hulk|hulk transformation;Growing|giant;Time manipulation|time stone|time control;Time travel;Invulnerability|bulletproof skin;Immortality;Energy blasts;Repulsor blasts|repulsors;Portals|portal creation;Astral projection;Reality warping;Chaos magic;Fire|flame powers;Stretching;Rock skin;Illusions;Talking to ants|controlling ants;Enhanced senses;Archery;Super agility;Genius intellect;Energy absorption;Photon blasts;Hard-light constructs|embiggen;Phasing|intangibility|walking through walls;Density control;Breathing underwater;Ice powers;Sand body;Mechanical arms;Duplication|cloning;Empathy;Cosmic powers;Matter transmutation;Precognition|seeing the future;Dream walking;Ten Rings powers|ten rings;Mirror dimension;Dimension hopping"},
+ {q:"Name a famous scientist", a:"Albert Einstein|einstein;Isaac Newton|newton;Marie Curie|curie;Charles Darwin|darwin;Nikola Tesla|tesla;Stephen Hawking|hawking;Galileo Galilei|galileo;Thomas Edison|edison;Leonardo da Vinci|da vinci;Aristotle;Archimedes;Nicolaus Copernicus|copernicus;Louis Pasteur|pasteur;Alexander Fleming|fleming;Gregor Mendel|mendel;Neil deGrasse Tyson|neil degrasse tyson;Carl Sagan|sagan;Bill Nye;Ada Lovelace|lovelace;Alan Turing|turing;Rosalind Franklin;James Watson|watson;Francis Crick|crick;Max Planck|planck;Niels Bohr|bohr;Michael Faraday|faraday;Johannes Kepler|kepler;Pythagoras;Euclid;Hippocrates;Jane Goodall|goodall;Richard Feynman|feynman;Robert Oppenheimer|oppenheimer;Dmitri Mendeleev|mendeleev;Erwin Schrödinger|schrodinger;Werner Heisenberg|heisenberg;Benjamin Franklin;Alexander Graham Bell|graham bell;James Clerk Maxwell|maxwell;Ernest Rutherford|rutherford;Antoine Lavoisier|lavoisier;Robert Hooke|hooke;Robert Boyle|boyle;Edwin Hubble|hubble;Rachel Carson;Katherine Johnson;Tim Berners-Lee;Alfred Nobel|nobel;Enrico Fermi|fermi;Paul Dirac|dirac;Linus Pauling|pauling;Barbara McClintock;Lise Meitner|meitner;Carl Linnaeus|linnaeus;Alexander von Humboldt|humboldt;Edward Jenner|jenner;Joseph Lister|lister;Robert Koch|koch;Jonas Salk|salk;Sigmund Freud|freud;Ivan Pavlov|pavlov;Avicenna|ibn sina;Al-Khwarizmi;Ibn al-Haytham|alhazen;Tycho Brahe|brahe;Blaise Pascal|pascal;René Descartes|descartes;Leonhard Euler|euler;Carl Friedrich Gauss|gauss;Emmy Noether|noether;Srinivasa Ramanujan|ramanujan;Chien-Shiung Wu;Dorothy Hodgkin;Jennifer Doudna|doudna;Tu Youyou;Vera Rubin;Henrietta Leavitt;Hypatia;Santiago Ramón y Cajal|ramon y cajal|cajal;Mary Anning;Alfred Russel Wallace;Amedeo Avogadro|avogadro;Alessandro Volta|volta;André-Marie Ampère|ampere;Georg Ohm|ohm;Heinrich Hertz|hertz;Wilhelm Röntgen|roentgen|rontgen;Peter Higgs|higgs;Subrahmanyan Chandrasekhar|chandrasekhar;Wangari Maathai;Daniel Alcides Carrión|daniel carrion;Pedro Paulet|paulet;Svante Arrhenius;Rudolf Virchow|virchow"},
+ {q:"Name a famous painting", a:"Mona Lisa|la gioconda;The Starry Night|starry night;The Last Supper|last supper;The Scream|scream;The Persistence of Memory|melting clocks;Girl with a Pearl Earring;The Birth of Venus|birth of venus;The Creation of Adam|creation of adam;Guernica;American Gothic;The Great Wave off Kanagawa|the great wave|great wave;Water Lilies;The Night Watch|night watch;Sunflowers;The Kiss;Las Meninas;Nighthawks;The School of Athens|school of athens;Liberty Leading the People;The Garden of Earthly Delights;Impression, Sunrise|impression sunrise;The Son of Man|son of man;Café Terrace at Night|cafe terrace at night;A Sunday Afternoon on the Island of La Grande Jatte|sunday afternoon on the island of la grande jatte;The Raft of the Medusa;Whistler's Mother;Primavera;Campbell's Soup Cans|campbells soup cans;Marilyn Diptych;The Two Fridas;Les Demoiselles d'Avignon;The Third of May 1808;Saturn Devouring His Son;Wanderer above the Sea of Fog;The Hay Wain;Olympia;Luncheon on the Grass|le dejeuner sur l'herbe;The Gleaners;Bal du moulin de la Galette;The Arnolfini Portrait|arnolfini portrait;Christina's World;The Treachery of Images|this is not a pipe;Ophelia;Napoleon Crossing the Alps;The Death of Marat;Lady with an Ermine;Salvator Mundi;The Potato Eaters;Bedroom in Arles;Irises;Wheatfield with Crows;The Fighting Temeraire;The Ambassadors;Hunters in the Snow;Netherlandish Proverbs;The Tower of Babel;Washington Crossing the Delaware;The Swing;Judith Slaying Holofernes;The Calling of Saint Matthew"},
+ {q:"Name a word with a silent letter", a:"Knife;Knee;Know;Knight;Write;Wrong;Island;Lamb;Comb;Thumb;Climb;Hour;Honest;Ghost;Listen;Castle;Wednesday;Doubt;Debt;Psychology;Gnome;Sign;Knock;Knot;Wrist;Wrap;Answer;Sword;Calm;Half;Talk;Walk;Should;Could;Would;Salmon;Receipt;Muscle;Scissors;Science;Autumn;Column;Hymn;Plumber;Bomb;Tomb;Subtle;Honor|honour;Heir;Rhythm;Rhyme;Whistle;Fasten;Often;Christmas;Mortgage;Pneumonia;Psalm;Knuckle;Knowledge;Wreck;Wrinkle;Gnaw;Foreign;Campaign;Design;Reign;Champagne;Ballet;Buffet;Aisle;Yolk;Folk;Chalk;Solemn;Condemn;Limb;Crumb;Dumb;Numb;Thistle;Wrestle;Raspberry;Cupboard;Handsome;Sandwich;Guitar;Guest;Guilt;Biscuit;Build;Indict;Pterodactyl;Mnemonic;Tsunami;Gnu;Knave"},
+ {q:"Name a Walt Disney Animation Studios movie", a:"Frozen;The Lion King|lion king;Moana;Aladdin;Beauty and the Beast;The Little Mermaid|little mermaid;Tangled;Zootopia|zootropolis;Encanto;Snow White and the Seven Dwarfs|snow white;Cinderella;Mulan;Lilo & Stitch|lilo and stitch;Frozen II|frozen 2;Big Hero 6;Wreck-It Ralph|wreck it ralph;Peter Pan;Sleeping Beauty;Pinocchio;Bambi;Dumbo;Alice in Wonderland;Pocahontas;Hercules;Tarzan;The Jungle Book|jungle book;Lady and the Tramp;One Hundred and One Dalmatians|101 dalmatians;The Princess and the Frog|princess and the frog;Moana 2;Zootopia 2;Ralph Breaks the Internet;Raya and the Last Dragon|raya;Bolt;The Hunchback of Notre Dame|hunchback of notre dame;The Emperor's New Groove|emperors new groove;Robin Hood;The Aristocats|aristocats;Fantasia;Wish;Chicken Little;Meet the Robinsons;Atlantis: The Lost Empire|atlantis;Treasure Planet;Brother Bear;The Sword in the Stone|sword in the stone;The Fox and the Hound|fox and the hound;Winnie the Pooh;The Many Adventures of Winnie the Pooh;The Rescuers|rescuers;Strange World;Dinosaur;Fantasia 2000;Home on the Range;Oliver & Company|oliver and company;The Great Mouse Detective|great mouse detective;The Rescuers Down Under;The Black Cauldron|black cauldron;The Adventures of Ichabod and Mr. Toad|ichabod and mr toad;Saludos Amigos;The Three Caballeros|three caballeros;Make Mine Music;Fun and Fancy Free;Melody Time"},
+ {q:"Name a language spoken by more than 10 million people", a:"English;Spanish;Mandarin|chinese|mandarin chinese;French;Arabic;Hindi;Portuguese;Russian;German;Japanese;Italian;Korean;Bengali|bangla;Urdu;Turkish;Vietnamese;Indonesian;Cantonese|yue;Persian|farsi;Swahili;Tagalog|filipino;Polish;Dutch;Thai;Punjabi;Tamil;Telugu;Marathi;Ukrainian;Greek;Romanian;Hungarian;Czech;Swedish;Malay;Javanese;Gujarati;Kannada;Malayalam;Amharic;Hausa;Yoruba;Igbo;Zulu;Xhosa;Afrikaans;Somali;Pashto;Nepali;Sinhala;Burmese;Uzbek;Kazakh;Azerbaijani|azeri;Kurdish;Haitian Creole;Nigerian Pidgin|pidgin;Hokkien|min nan|taiwanese;Wu|shanghainese;Hakka;Odia|oriya;Assamese;Sindhi;Bhojpuri;Maithili;Cebuano;Sundanese;Oromo;Malagasy;Lingala;Kinyarwanda;Shona;Akan|twi;Fula|fulani;Wolof;Bambara;Xiang|hunanese;Jin;Gan;Saraiki;Magahi;Chhattisgarhi;Chittagonian"},
+ {q:"Name a country that borders Brazil", a:"Argentina;Peru;Colombia;Uruguay;Paraguay;Bolivia;Venezuela;Guyana;Suriname;France|french guiana"},
+ {q:"Name a breakfast food", a:"Eggs|egg;Pancakes|pancake;Bacon;Cereal;Toast;Waffles|waffle;Oatmeal|porridge|oats;French toast;Bagel;Yogurt|yoghurt;Sausage;Croissant;Muffin;Hash browns;Omelette|omelet;Scrambled eggs;Fried eggs;Avocado toast;Smoothie;Granola;Donut|doughnut;Bread;Fruit;Jam;Cheese;Ham;Breakfast burrito|burrito;Breakfast sandwich;Biscuits and gravy;Grits;Eggs Benedict;Quiche;Crepes|crepe;Huevos rancheros;Chilaquiles;Tamales|tamal|tamale;Arepa;Pan con chicharrón|pan con chicharron;Empanada;Cinnamon roll;Danish|danish pastry;Scone;Churros|churro;Pan dulce;Tortilla;Shakshuka;Full English|english breakfast;Baked beans;Black pudding;Muesli;Acai bowl;Chia pudding;Dim sum;Congee;Idli;Dosa;Paratha;Poha;Upma;Gallo pinto;Mangú|mangu;Natto;Miso soup;Onigiri;Tamagoyaki;Pho;Nasi lemak;Roti canai;Ful medames;Menemen;Simit;Khachapuri;Syrniki;Kasha;Blini;Ackee and saltfish;Bubble and squeak;Corned beef hash;Kippers;Kedgeree;Lox;Spam musubi"},
+ {q:"Name something you'd see at the beach", a:"Sand;Ocean|sea;Waves;Seashells|shells;Sun;Umbrella|beach umbrella;Towel;Surfers|surfer;Surfboard;Seagulls|seagull|gulls;Crabs|crab;Sandcastle;Sunscreen;Swimsuit|bikini;Lifeguard;Palm trees|palm tree;Starfish;Seaweed;Rocks;Beach volleyball|volleyball;Beach ball;Bucket;Shovel|spade;Ice cream;Boats|boat;Sunglasses;Flip flops;Beach chair|chairs;Jellyfish;Pier;Kites|kite;Dogs|dog;Dolphins;Fish;Lighthouse;Footprints;Driftwood;Trash;Cooler;Sunbathers;Sunset;Tide;Cliffs;Sand dunes|dunes;Snorkel;Kayak;Jet ski;Paddleboard;Lifeguard tower;Red flag|flags;Buoy;Sea glass;Hermit crab;Sea lion|seal;Pelican;Coconut;Hammock;Bonfire;Fishermen|fisherman;Vendors|street vendor;Showers;Beach bar;Boardwalk;Parasailing;Kitesurfer;Metal detector;Sand dollar;Tide pools;Barnacles;Sea urchin"},
+ {q:"Name a character from the Super Mario games", a:"Mario;Luigi;Princess Peach|peach;Bowser;Yoshi;Toad;Wario;Waluigi;Donkey Kong;Princess Daisy|daisy;Rosalina;Goomba;Koopa Troopa|koopa;Bowser Jr.|bowser jr;Boo;Shy Guy;Toadette;Birdo;King Boo;Dry Bones;Lakitu;Bullet Bill;Piranha Plant;Chain Chomp;Kamek;Diddy Kong;Hammer Bro;Thwomp;Blooper;Cheep Cheep;Wiggler;Petey Piranha;Pauline;Cappy;Toadsworth;Professor E. Gadd|e gadd;Captain Toad;Bob-omb|bob omb;Larry Koopa|larry;Morton Koopa|morton;Wendy O. Koopa|wendy;Iggy Koopa|iggy;Roy Koopa|roy;Lemmy Koopa|lemmy;Ludwig von Koopa|ludwig;Dry Bowser;Baby Mario;Baby Luigi;Baby Peach;Baby Daisy;Baby Rosalina;Funky Kong;Cranky Kong;Luma;Nabbit;Spiny;Buzzy Beetle;Monty Mole;Pokey;Magikoopa;Boom Boom;Pom Pom;King Bob-omb;Whomp;Fuzzy;Spike;Geno;Mallow;Smithy;Fawful;Cackletta;Count Bleck;Dimentio;Wart;Tatanga;Prince Peasley;Starlow;Huey;Olivia;Kersti;Prince Florian;Poplin"},
+ {q:"Name a horror movie", a:"The Exorcist|exorcist;It;Scream;Halloween;The Conjuring|conjuring;A Nightmare on Elm Street|nightmare on elm street;Friday the 13th;The Shining|shining;Saw;Psycho;Get Out;The Texas Chainsaw Massacre|texas chainsaw massacre;Annabelle;The Ring|ring;Insidious;Paranormal Activity;Child's Play|childs play;The Nun|nun;Hereditary;A Quiet Place|quiet place;Jaws;Us;The Grudge|grudge;Final Destination;The Purge|purge;Sinister;Smile;Terrifier;M3GAN|megan;Five Nights at Freddy's|five nights at freddys;Talk to Me;Nope;Midsommar;Barbarian;The Babadook|babadook;The Witch|the vvitch;It Follows;Hellraiser;Candyman;Carrie;Poltergeist;The Omen|omen;Rosemary's Baby|rosemarys baby;Dracula;Frankenstein;The Mummy|mummy;Alien;The Thing;The Evil Dead|evil dead;Night of the Living Dead;Dawn of the Dead;28 Days Later;28 Years Later;The Blair Witch Project|blair witch project|blair witch;The Others;The Sixth Sense|sixth sense;The Cabin in the Woods|cabin in the woods;Hostel;The Hills Have Eyes;Wrong Turn;I Know What You Did Last Summer;The Strangers;Happy Death Day;Ready or Not;Pearl;X;Longlegs;The Substance|substance;Nosferatu;Sinners;Weapons;The Black Phone|black phone;Evil Dead Rise;Split;Don't Breathe|dont breathe;Lights Out;Ouija;Mama;Gremlins;The Fly;An American Werewolf in London;The Wicker Man;Suspiria;The Descent;Train to Busan;REC|[rec];The Orphanage;Ringu;Ju-On;Let the Right One In;Pet Sematary;Misery;The Mist;1408;Doctor Sleep;Jeepers Creepers;Krampus;Trick 'r Treat;Annabelle Creation;The Visit;Oculus;Abigail;Late Night with the Devil;Speak No Evil;Totally Killer;The Ritual;Hush;Unfriended;Host;Skinamarink;Mandy;The Autopsy of Jane Doe;His House;Relic;Saint Maud;Men;Infinity Pool;Bodies Bodies Bodies;Fresh;Bones and All;Possessor;The Lighthouse;The Wailing;A Tale of Two Sisters;Shutter;Martyrs;Raw;Audition;The Devil's Backbone;Lake Mungo;The Changeling;Black Christmas;Phantasm;The Beyond;Re-Animator;Tremors;Videodrome;Possession"},
+ {q:"Name something you can fold", a:"Paper;Clothes|laundry;Towel;Napkin;Map;Blanket;Sheets|bed sheet;Letter;Shirt;Pants;Origami;Paper airplane;Chair|folding chair;Table|folding table;Arms;Hands;Umbrella;Envelope;Phone|foldable phone;Laptop;Wallet;Card|greeting card;Tent;Stroller;Sofa bed|futon;Ironing board;Fan|hand fan;Cards|poker hand|your hand;Egg whites|batter;Dough|pastry;Burrito|tortilla;Pizza|pizza slice;Crepe;Omelette|omelet;Taco;Dumpling;Socks;Flag;Newspaper;Page|book page;Box|cardboard box;Plastic bag|bag;Bike|folding bike;Scooter;Wheelchair;Ladder;Pocket knife|knife;Glasses|sunglasses;Murphy bed|bed;Door|folding door;Room divider|screen;Legs;Wings;Fitted sheet;Ears;Hat;Business|company;Protein;Mountains"},
+ {q:"Name a board game", a:"Monopoly;Chess;Scrabble;Clue|cluedo;Checkers|draughts;Candy Land|candyland;Chutes and Ladders|snakes and ladders;The Game of Life|game of life|life;Sorry!|sorry;Risk;Battleship;Connect Four|connect 4;Trouble;Guess Who|guess who?;Trivial Pursuit;Pictionary;Catan|settlers of catan;Ticket to Ride;Backgammon;Ludo|parcheesi|pachisi;Go;Mancala;Mouse Trap|mousetrap;Stratego;Othello|reversi;Chinese Checkers;Mastermind;Cranium;Hungry Hungry Hippos;Pandemic;Carcassonne;Azul;Wingspan;Splendor;Sequence;Blokus;Dixit;Betrayal at House on the Hill;King of Tokyo;Small World;Scythe;Terraforming Mars;Gloomhaven;Root;Everdell;Cascadia;Kingdomino;Patchwork;Agricola;Puerto Rico;Power Grid;Mysterium;Payday;Masterpiece;Axis & Allies|axis and allies;Diplomacy;Labyrinth;Hive;Quoridor;Santorini;Onitama;Tsuro;Shogi;Xiangqi|chinese chess;Nine Men's Morris;Twilight Imperium;Hnefatafl;Senet;Royal Game of Ur"},
+ {q:"Name the capital city of an African country", a:"Cairo;Nairobi;Cape Town;Pretoria;Addis Ababa;Abuja;Accra;Rabat;Dakar;Tunis;Algiers;Kinshasa;Tripoli;Khartoum;Kampala;Kigali;Luanda;Harare;Lusaka;Maputo;Mogadishu;Dodoma;Antananarivo;Windhoek;Gaborone;Monrovia;Freetown;Bamako;Yaoundé|yaounde;Brazzaville;Libreville;Djibouti;Asmara;Juba;Lilongwe;Niamey;N'Djamena|ndjamena;Ouagadougou;Conakry;Bangui;Port Louis;Victoria;Maseru;Mbabane;Banjul;Lomé|lome;Porto-Novo|porto novo;Yamoussoukro;Nouakchott;Bissau;Malabo;Praia;São Tomé|sao tome;Moroni;Gitega;Bloemfontein;Lobamba"},
+ {q:"Name something that melts", a:"Ice|ice cubes;Ice cream;Snow;Chocolate;Butter;Cheese;Candle|wax;Popsicle;Glacier|glaciers;Snowman;Metal|steel|iron;Gold;Plastic;Crayon|crayons;Marshmallow;Sugar;Icicle;Glass;Lava|rock;Candy|lollipop;Gummy bears|gummies;Ice caps|polar ice caps;Iceberg;Frost;Lead;Silver;Copper;Aluminum|aluminium;Tin;Solder;Caramel;Lipstick;Coconut oil;Lard;Fat;Your heart|heart;Cotton candy;Mozzarella;Frozen yogurt;Slushie;Ice sculpture;Hail;Permafrost;Sorbet;Gelato;Salt;Tar|asphalt;Vinyl records|vinyl;Lip balm;Gum;Hot glue|glue stick;Resin;Olaf;Frosty the Snowman;The Wicked Witch of the West|wicked witch;Tungsten"}
+];
+RAW.push(...NEW_RAW);
+
+/* ---------- matching ---------- */
+function clean(s){
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/&/g," and ").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim()
+    .replace(/^(the|a|an) /,"");
+}
+function keys(s){
+  const k=clean(s).replace(/ /g,""); if(!k) return [];
+  const out=new Set([k]);
+  if(k.endsWith("ies")&&k.length>4) out.add(k.slice(0,-3)+"y");
+  if(k.endsWith("es")&&k.length>4) out.add(k.slice(0,-2));
+  if(k.endsWith("s")&&k.length>3) out.add(k.slice(0,-1));
+  return [...out];
+}
+const PROMPTS = RAW.map(p=>{
+  const answers=p.a.split(";").map(x=>x.split("|").map(y=>y.trim()));
+  const map=new Map();
+  answers.forEach((al,i)=>al.forEach(n=>keys(n).forEach(k=>{ if(!map.has(k)) map.set(k,i); })));
+  return {q:p.q,answers,names:answers.map(a=>a[0]),map};
+});
+function lookupExact(P,input){
+  for(const k of keys(input)){ if(P.map.has(k)) return P.map.get(k); }
+  return -1;
+}
+/* typo distance: insertions, deletions, substitutions and swapped neighbours each count as 1 */
+function dist(a,b,max){
+  if(Math.abs(a.length-b.length)>max) return max+1;
+  const d=[];for(let i=0;i<=a.length;i++){d[i]=[i];}
+  for(let j=0;j<=b.length;j++) d[0][j]=j;
+  for(let i=1;i<=a.length;i++){let rowMin=Infinity;
+    for(let j=1;j<=b.length;j++){
+      const c=a[i-1]===b[j-1]?0:1;
+      let v=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);
+      if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) v=Math.min(v,d[i-2][j-2]+1);
+      d[i][j]=v; if(v<rowMin) rowMin=v;}
+    if(rowMin>max) return max+1;}
+  return d[a.length][b.length];
+}
+function lookup(P,input){
+  const exact=lookupExact(P,input); if(exact>=0) return exact;
+  let best=-1,bestD=Infinity,bestFirst=false;
+  for(const k of keys(input)){
+    const max=k.length<=3?0:k.length<=6?1:2; if(!max) continue;
+    for(const [key,idx] of P.map){
+      const dd=dist(k,key,max); if(dd>max) continue;
+      const first=key[0]===k[0];
+      if(dd<bestD||(dd===bestD&&first&&!bestFirst)){best=idx;bestD=dd;bestFirst=first;}
+    }
+  }
+  return best;
+}
+
+/* ---------- scoring: elevation +1 = most common (sky), -1 = rarest (sea), 0 = dead center ---------- */
+function judge(P,idx){
+  if(idx<0) return {tier:"Off the map",pts:0,e:null,code:"x"};
+  const n=P.names.length, p=idx/(n-1), e=(0.5-p)*2, d=Math.abs(e);
+  const up=e>0;
+  const center=idx===Math.round((n-1)/2);
+  /* flat points per level; only the exact middle answer scores 100 */
+  let tier,code,pts;
+  if(center){tier="Dead Center";code="c";pts=100}
+  else if(d<=0.15){tier=up?"Upper Ground":"Lower Ground";code="g";pts=85}
+  else if(d<=0.45){tier=up?"Uplands":"Lowlands";code="y";pts=60}
+  else if(d<=0.8){tier=up?"Cloudline":"Shoreline";code=up?"s":"l";pts=30}
+  else {tier=up?"Noillirk's Sky":"Krillion's Sea";code=up?"s":"l";pts=10}
+  return {tier,pts,e,code,center};
+}
+const BLURB={
+  "Dead Center":"Dead center! This is the one answer worth 100.",
+  "Upper Ground":"Solid ground, just a touch on the common side of the middle.",
+  "Lower Ground":"Solid ground, just a touch on the rare side of the middle.",
+  "Midground":"Solid ground, very close to the middle.",
+  "Uplands":"A bit too common. Your krill drifted uphill.",
+  "Lowlands":"A bit too rare. Your krill slid toward the water.",
+  "Cloudline":"Quite common. Your krill is up in the clouds.",
+  "Shoreline":"Quite rare. Your krill is wading into the sea.",
+  "Noillirk's Sky":"One of the most common answers. That's Noillirk's sky.",
+  "Krillion's Sea":"One of the rarest answers. That's Krillion's deep sea.",
+  "Off the map":"That answer isn't on our map for this prompt.",
+  "Out of time":"Time ran out before you answered."
+};
+const SHARE={c:"⭐",g:"🟩",y:"🟨",s:"☁️",l:"🌊",x:"⬛"};
+
+/* ---------- rng ---------- */
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function pick(seed,count){
+  const r=rng(seed), idx=PROMPTS.map((_,i)=>i);
+  for(let i=idx.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]]}
+  return idx.slice(0,count);
+}
+/* daily rotation: every prompt is used once before any comes back.
+   Day 0 is 28 Oct 2026; each cycle gets its own shuffle. */
+function dayNumber(){const d=new Date();return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(2026,9,28))/864e5)}
+function dailyOrder(){
+  const day=dayNumber(), per=Math.floor(PROMPTS.length/ROUNDS);
+  const cycle=Math.floor(day/per), slot=((day%per)+per)%per;
+  return pick(hash("midillion-cycle-"+cycle),PROMPTS.length).slice(slot*ROUNDS,slot*ROUNDS+ROUNDS);
+}
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function store(k,v){try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k,JSON.stringify(v)); }catch(e){return null}}
+
+/* ---------- state ---------- */
+const ROUNDS=7, SECONDS=25;
+let S=null, tick=null;
+const app=document.getElementById("app");
+const krill=(c="#E2457A",w=40)=>pixSvg(ART.krill,{"#":c,"=":c,"d":"#A0285A","l":"#FF96B4","a":"#FF96B4","p":"#FF96B4","t":"#FF96B4","e":"#0E1330","w":"#FFFFFF"},w);
+/* one creature per tier, from sky to sea */
+const LAND=[
+ {tier:"Noillirk's Sky",art:"balloons",pal:{a:"#FFC6A8",b:"#C9B8F2",c:"#FFD66E",s:"#F3EEDF"},who:"Balloons",elev:"+800 m and up",pts:"10",line:"Everybody says it. Floated off to Noillirk.",color:"var(--sky)"},
+ {tier:"Cloudline",art:"bird",pal:{"#":"#9FD4F2",l:"#F3EEDF",o:"#0E1330",">":"#FFD66E",t:"#9FD4F2"},who:"Bluebird",elev:"+450 to +800 m",pts:"30",line:"Very common. Up with the birds.",color:"var(--sky)"},
+ {tier:"Uplands",art:"butterfly",pal:{"#":"#C79A2E",l:"#FFD66E",a:"#F3EEDF"},who:"Butterfly",elev:"+150 to +450 m",pts:"60",line:"A bit obvious. Fluttering uphill.",color:"var(--gold)"},
+ {tier:"Upper Ground",art:"snail",pal:{"#":"#8C6A45",l:"#E8B878",a:"#C9B8F2"},who:"Snail",elev:"0 to +150 m",pts:"85",line:"Solid ground, just above the middle.",color:"var(--mint)"},
+ {tier:"Dead Center",art:"snail",pal:{"#":"#C79A2E",l:"#FFD66E",a:"#FFF1B8"},who:"Golden snail",elev:"exactly 0 m",pts:"100",line:"The one exact middle answer. Only one per prompt.",color:"var(--gold)"},
+ {tier:"Lower Ground",art:"snail",pal:{"#":"#8C6A45",l:"#E8B878",a:"#C9B8F2"},who:"Snail",elev:"0 to −150 m",pts:"85",line:"Solid ground, just below the middle.",color:"var(--mint)"},
+ {tier:"Lowlands",art:"frog",pal:{"#":"#4FA97A",l:"#A8E6C3",w:"#FFFFFF",b:"#0E1330"},who:"Frog",elev:"−150 to −450 m",pts:"60",line:"A bit obscure. Hopping into the marsh.",color:"var(--gold)"},
+ {tier:"Shoreline",art:"crab",pal:{"#":"#FF7A59",w:"#FFFFFF",b:"#0E1330"},who:"Crab",elev:"−450 to −800 m",pts:"30",line:"Quite rare. Scuttling at the water's edge.",color:"var(--lavender)"},
+ {tier:"Krillion's Sea",art:"jelly",pal:{"#":"#C9B8F2",l:"#E7DDFF"},who:"Jellyfish",elev:"−800 m and below",pts:"10",line:"Almost nobody says it. Drifting into Krillion's sea.",color:"var(--lavender)"}
+];
+const ROCK={art:"rock",pal:{"#":"#6F76A6",l:"#A9AFD6",d:"#4B527F"},who:"Rock"};
+function creature(tier,w=40){
+  const c=LAND.find(x=>x.tier===tier)||ROCK;
+  return c.art==="krill" ? krill("#E2457A",w) : pixSvg(ART[c.art],c.pal,Math.round(w*Math.min(1,ART[c.art][0].length/13)));
+}
+const whoFor=t=>(LAND.find(x=>x.tier===t)||ROCK).who;
+document.getElementById("logo").innerHTML=krill("#E2457A",44);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function home(){
+  clearInterval(tick);
+  const t=store("midillion-"+todayStr());
+  app.innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:20px">
+    <div class="section panel" aria-hidden="true">
+      <div class="skyband">
+        <span class="lab t">▲ MOST COMMON · NOILLIRK'S SKY</span>
+        <span class="deco" style="left:50%;top:40px">${pixSvg(ART.cloud,{"#":"#F3EEDF"},72)}</span>
+        <span class="deco" style="left:22%;top:66px;opacity:.8">${pixSvg(ART.cloud,{"#":"#F3EEDF"},48)}</span>
+        <span class="deco" style="right:12%;top:22px">${pixSvg(ART.balloons,{"a":"#FFC6A8","b":"#C9B8F2","c":"#FFD66E","s":"#F3EEDF"},52)}</span>
+      </div>
+      <div class="groundband">
+        <span class="deco" style="left:14%;top:-6px">${pixSvg(ART.tuft,{"#":"#5FC46B"},20)}</span>
+        <span class="deco" style="right:18%;top:-6px">${pixSvg(ART.tuft,{"#":"#5FC46B"},20)}</span>
+        <div class="krill-hero">${krill("#E2457A",64)}</div>
+        <span class="lab m">DEAD CENTER · 100 POINTS</span>
+      </div>
+      <div class="seaband">
+        <span class="deco" style="left:70%;top:22px">${pixSvg(ART.bubble,{"#":"#9FD4F2"},15)}</span>
+        <span class="deco" style="left:75%;top:48px">${pixSvg(ART.bubble,{"#":"#9FD4F2"},10)}</span>
+        <span class="deco" style="left:32%;top:56px">${pixSvg(ART.bubble,{"#":"#9FD4F2"},12)}</span>
+        <span class="lab b">▼ RAREST · KRILLION'S SEA</span>
+      </div>
+    </div>
+
+    <section class="card panel">
+      <h2>Name the answer right in the middle.</h2>
+      <p>Every prompt has a map of answers, ranked from the one everybody says to the one almost nobody says. The obvious answer floats away into the sky. The obscure one sinks into the sea. Pick the one in between to keep your krill on the ground.</p>
+      <div class="rules">
+        <div class="rule sky"><b>Too common</b><small>Like "Apple" for a fruit. Few points.</small></div>
+        <div class="rule mid"><b>Right in the middle</b><small>Only the exact middle scores 100.</small></div>
+        <div class="rule sea"><b>Too rare</b><small>Like "Feijoa". Few points.</small></div>
+      </div>
+      <p>${ROUNDS} prompts, ${SECONDS} seconds each, up to ${ROUNDS*100} points.</p>
+      <div class="row">
+        <button class="btn" id="daily">Play today's ${ROUNDS}</button>
+        <button class="btn alt" id="practice">Practice round</button>
+        ${t?`<span class="today">Today: <b>${t.total}/${ROUNDS*100}</b></span>`:""}
+      </div>
+    </section>
+
+    <section class="card panel">
+      <h2>Who lives where</h2>
+      <p>Each answer lands somewhere between the sky and the sea, and whoever lives there shows up for you.</p>
+      <div class="legend">${LAND.map(c=>`<div class="lrow ${c.tier==="Dead Center"?"best":""}"><span class="ic">${creature(c.tier,38)}</span><span><b style="color:${c.color}">${esc(c.tier)}</b><small>${esc(c.who)} · ${esc(c.elev)}. ${esc(c.line)}</small></span><code>${c.pts}</code></div>`).join("")}</div>
+    </section>
+  </div>`;
+  document.getElementById("daily").onclick=()=>start("daily");
+  document.getElementById("practice").onclick=()=>start("practice");
+}
+
+function start(mode){
+  const order= mode==="daily" ? dailyOrder() : pick((Math.random()*1e9)|0,ROUNDS);
+  S={mode,order,i:0,results:[]};
+  round();
+}
+
+function meterHTML(P,res){
+  const n=P.names.length;
+  const ticks=P.names.map((_,i)=>`<span class="tick" style="top:${(i/(n-1))*100}%"></span>`).join("");
+  return `<div class="meter" aria-hidden="true">
+    ${ticks}
+    <div class="zone"></div>
+    <span class="tag" style="top:8px">SKY</span>
+    <span class="tag" style="top:calc(50% - 8px)">0 m</span>
+    <span class="tag" style="bottom:8px">SEA</span>
+    <div class="me ${res?"":"idle"}" id="me">${res?creature(res.tier,40):krill()}</div>
+  </div>`;
+}
+
+function dotsHTML(){
+  return `<div class="dots">${Array.from({length:ROUNDS},(_,i)=>{
+    const r=S.results[i]; return `<span class="dot ${r?r.code:(i===S.i?"now":"")}"></span>`;}).join("")}</div>`;
+}
+const total=()=>S.results.reduce((a,r)=>a+r.pts,0);
+
+function round(){
+  const P=PROMPTS[S.order[S.i]];
+  app.innerHTML=`
+  <div class="play">
+    ${meterHTML(P,null)}
+    <section class="card panel">
+      <div class="top">${dotsHTML()}<span>${S.mode==="daily"?"Daily":"Practice"} · <span class="score">${total()} pts</span></span></div>
+      <h2 class="prompt">${esc(P.q)}</h2>
+      <div class="timer"><i id="bar"></i></div>
+      <div class="form">
+        <input type="text" id="guess" placeholder="Type your answer" aria-label="Your answer" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+        <button class="btn" type="button" id="go">Answer</button>
+      </div>
+      <div class="miss" id="miss" role="status" hidden></div>
+      <div class="hint">This map has <b>${P.names.length}</b> answers. Aim for the one ranked around <b>#${Math.round((P.names.length-1)/2)+1}</b>.</div>
+    </section>
+  </div>`;
+  const inp=document.getElementById("guess"); inp.focus({preventScroll:true});
+  let sent=false;
+  const send=()=>{
+    if(sent) return;
+    if(!inp.value.trim()){ inp.placeholder="Type an answer first"; inp.focus(); return; }
+    if(lookup(P,inp.value)<0){
+      const m=document.getElementById("miss");
+      m.textContent=`"${inp.value.trim()}" isn't on our map. Try another answer.`;
+      m.hidden=false; m.classList.remove("shake"); void m.offsetWidth; m.classList.add("shake");
+      inp.value=""; inp.focus(); return;
+    }
+    sent=true; answer(inp.value);
+  };
+  document.getElementById("go").addEventListener("click",send);
+  inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); send(); } });
+  const t0=performance.now(), bar=document.getElementById("bar");
+  clearInterval(tick);
+  tick=setInterval(()=>{
+    const left=Math.max(0,1-(performance.now()-t0)/(SECONDS*1000));
+    bar.style.width=(left*100)+"%"; bar.classList.toggle("low",left<0.25);
+    if(left<=0) answer(null,false,true);
+  },100);
+}
+
+function answer(text,skipped,timeout){
+  clearInterval(tick);
+  const P=PROMPTS[S.order[S.i]];
+  const idx= text ? lookup(P,text) : -1;
+  let r=judge(P,idx);
+  if(timeout) r={...r,tier:"Out of time"};
+  if(skipped) r={...r,tier:"Skipped"};
+  r.input = idx>=0 ? P.names[idx] : (text||"");
+  r.fixed = (idx>=0 && lookupExact(P,text)<0) ? text.trim() : "";
+  r.rank = idx>=0 ? idx+1 : null;
+  r.q=P.q;
+  S.results[S.i]=r;
+  reveal(P,r);
+}
+
+function reveal(P,r){
+  const n=P.names.length, mid=Math.round((n-1)/2);
+  const last=S.i===ROUNDS-1;
+  const elev = r.e===null ? "" : (r.center ? "0 m · dead center" : (r.e>0?"+":"−")+Math.round(Math.abs(r.e)*1000)+" m "+(r.e>0?"above ground":"below sea level"));
+  const blurb = r.center ? "Dead center. The golden snail found the one answer worth 100." : (BLURB[r.tier] || "No answer this time.");
+  app.innerHTML=`
+  <div class="play">
+    ${meterHTML(P,r)}
+    <section class="card panel">
+      <div class="top">${dotsHTML()}<span>${S.mode==="daily"?"Daily":"Practice"} · <span class="score">${total()} pts</span></span></div>
+      <h2 class="prompt">${esc(P.q)}</h2>
+      <div class="reveal">
+        <div class="verdict"><h3 style="color:${r.code==="c"?"var(--gold)":r.code==="g"?"var(--mint)":r.code==="y"?"var(--gold)":r.code==="s"?"var(--sky)":r.code==="l"?"var(--lavender)":"var(--muted)"}">${r.center?"sNailed it!":esc(r.tier)}</h3><span class="pts">+${r.pts}</span></div>
+        <div class="yours">${creature(r.tier,44)}<div><b>${r.rank?esc(r.input):(r.input?"“"+esc(r.input)+"”":"No answer")}</b>${r.fixed?` <span class="elev">(you typed “${esc(r.fixed)}”)</span>`:""}<br>${r.rank?`Ranked #${r.rank} of ${n}. `:""}${esc(blurb)}${elev?` <span class="elev">${elev}</span>`:""}</div></div>
+        <div class="note">The answers for every prompt are revealed at the end.</div>
+        <div class="row"><button class="btn" id="next">${last?"See my results":"Next prompt"}</button></div>
+      </div>
+    </section>
+  </div>`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const me=document.getElementById("me");
+    if(r.e===null){ me.style.top="50%"; me.style.opacity=".35"; }
+    else me.style.top=((1-r.e)/2*100)+"%";
+  }));
+  const nx=document.getElementById("next"); nx.focus({preventScroll:true});
+  nx.onclick=()=>{ if(last) finish(); else { S.i++; round(); } };
+}
+
+function titleFor(){
+  const tot=total(), avg=tot/ROUNDS;
+  const es=S.results.filter(r=>r.e!==null).map(r=>r.e);
+  const lean=es.length?es.reduce((a,b)=>a+b,0)/es.length:0;
+  if(avg>=85) return ["Center of the Earth","You found the middle almost every time."];
+  if(avg>=65) return ["Steady Footing","Your krill barely left the ground."];
+  if(lean>0.2) return ["Head in the Clouds","Your answers leaned toward the obvious. Try going a little deeper."];
+  if(lean<-0.2) return ["Lost at Sea","Your answers leaned toward the obscure. Try something more familiar."];
+  return ["Hill Walker","Up and down, but you kept coming back to the middle."];
+}
+
+function finish(){
+  const tot=total(), [title,line]=titleFor();
+  if(S.mode==="daily"){ const prev=store("midillion-"+todayStr()); if(!prev||tot>prev.total) store("midillion-"+todayStr(),{total:tot}); }
+  const share=`Midillion ${S.mode==="daily"?todayStr():"practice"} · ${tot}/${ROUNDS*100}\n${S.results.map(r=>SHARE[r.code]).join("")}`;
+  app.innerHTML=`
+  <section class="card panel final">
+    ${krill("#E2457A",80)}
+    <div class="big">${tot}<span style="font-size:1.2rem;color:var(--muted)"> / ${ROUNDS*100}</span></div>
+    <div class="title">${esc(title)}</div>
+    <p>${esc(line)}</p>
+    <div class="land" aria-label="Where each answer landed">${S.results.map((r,i)=>{
+      const pos=r.e===null?50:(1-r.e)/2*100, top=Math.min(50,pos), h=Math.abs(pos-50);
+      return `<div class="col"><span class="line" style="top:${top}%;height:${h}%"></span><span class="cr" style="top:${pos}%">${creature(r.tier,30)}</span><span class="num">${i+1}</span></div>`;}).join("")}</div>
+    <h2 style="align-self:flex-start">The answers</h2>
+    <div class="recap">${S.results.map(r=>{
+      const P=PROMPTS.find(x=>x.q===r.q), n=P.names.length, mid=Math.round((n-1)/2);
+      const near=P.names.slice(Math.max(0,mid-3),mid).concat(P.names.slice(mid+1,mid+4)).map(esc).join(", ");
+      return `<article class="ritem">
+        <div class="rrow"><span class="ric">${creature(r.tier,28)}</span><span>${esc(r.q)}<br><em>You: ${r.rank?esc(r.input)+" · #"+r.rank+" of "+n:esc(r.tier)}</em></span><em>${esc(r.tier)}</em><code>+${r.pts}</code></div>
+        <div class="rans"><span class="chip sky"><small>Most common</small>${esc(P.names[0])}</span><span class="chip mid"><small>Dead center</small>${esc(P.names[mid])}</span><span class="chip sea"><small>Rarest</small>${esc(P.names[n-1])}</span></div>
+        <div class="note">Also on solid ground: ${near}.</div>
+      </article>`;}).join("")}</div>
+    <textarea id="share" rows="2" readonly aria-label="Share text">${esc(share)}</textarea>
+    <div class="row" style="justify-content:center">
+      <button class="btn" id="copy">Copy result</button>
+      <button class="btn alt" id="again">Practice round</button>
+      <button class="btn ghost" id="home">Home</button>
+    </div>
+  </section>`;
+  const ta=document.getElementById("share"), cp=document.getElementById("copy");
+  cp.onclick=()=>{
+    const done=()=>{cp.textContent="Copied"; setTimeout(()=>cp.textContent="Copy result",1600)};
+    const fallback=()=>{ta.focus();ta.select();cp.textContent="Selected, press copy"};
+    try{ navigator.clipboard.writeText(share).then(done,fallback); }catch(e){ fallback(); }
+  };
+  document.getElementById("again").onclick=()=>start("practice");
+  document.getElementById("home").onclick=home;
+}
+
+home();
+</script>
+
+</body>
+</html>
